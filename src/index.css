@@ -1,24 +1,39 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   body {
-    @apply bg-gov-bg text-gov-text font-sans antialiased;
+    @apply bg-background text-slate-800 font-sans antialiased;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-gov-primary text-white px-4 py-2 rounded-md hover:bg-gov-blue transition-colors duration-300 font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-gov-saffron focus:ring-offset-2;
+    @apply bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-primary-dark transition-colors shadow-sm;
   }
-  .btn-outline {
-    @apply bg-white text-gov-primary border border-gov-primary px-4 py-2 rounded-md hover:bg-gov-bg transition-colors duration-300 font-medium;
-  }
-  .input-field {
-    @apply mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-gov-primary focus:ring-gov-primary sm:text-sm px-3 py-2 border outline-none transition-shadow;
+  .btn-secondary {
+    @apply bg-white text-slate-700 border border-slate-300 px-4 py-2 rounded-lg font-medium hover:bg-slate-50 transition-colors shadow-sm;
   }
   .card {
-    @apply bg-white rounded-lg shadow-md p-6 border border-gray-100;
+    @apply bg-surface rounded-xl shadow-sm border border-slate-100 p-6;
   }
+}
+
+/* Custom scrollbar for webkit */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }

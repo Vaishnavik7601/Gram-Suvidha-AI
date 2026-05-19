@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['citizen', 'admin'],
+    enum: ['citizen', 'admin', 'worker'],
     default: 'citizen',
   },
   profilePhoto: {
@@ -56,6 +56,10 @@ const userSchema = new mongoose.Schema({
     default: '',
   },
   country: {
+    type: String,
+    default: '',
+  },
+  pincode: {
     type: String,
     default: '',
   },

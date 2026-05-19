@@ -1,21 +1,25 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, LogIn, UserCircle, ShieldCheck } from 'lucide-react';
+import { Eye, EyeOff, LogIn, UserCircle, ShieldCheck, Activity } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 const Login = () => {
+  const { t } = useLanguage();
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState('citizen'); // 'citizen' or 'admin'
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: identifier, password }), // Assuming email is used as identifier
@@ -26,126 +30,142 @@ const Login = () => {
       if (response.ok) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('role', data.role);
+        localStorage.setItem('user', JSON.stringify({ name: data.name, email: data.email, _id: data._id }));
         
-        if (role === 'admin' || data.role === 'admin') {
+        if (data.role === 'admin' || role === 'admin') {
           navigate('/admin/dashboard');
         } else {
-          navigate('/citizen/dashboard');
+          navigate('/');
         }
       } else {
         setError(data.message || 'Invalid credentials');
       }
     } catch (err) {
       setError('Network error. Is the backend running?');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="card w-full shadow-xl">
-      <div className="flex justify-center mb-6 space-x-2 border-b pb-4">
-        <button
-          type="button"
-          onClick={() => setRole('citizen')}
-          className={`px-4 py-2 text-sm font-medium rounded-t-md flex items-center gap-2 transition-colors ${
-            role === 'citizen'
-              ? 'text-gov-primary border-b-2 border-gov-primary bg-blue-50'
-              : 'text-gov-muted hover:text-gov-text border-b-2 border-transparent'
-          }`}
-        >
-          <UserCircle size={18} />
-          Citizen Login
-        </button>
-        <button
-          type="button"
-          onClick={() => setRole('admin')}
-          className={`px-4 py-2 text-sm font-medium rounded-t-md flex items-center gap-2 transition-colors ${
-            role === 'admin'
-              ? 'text-gov-primary border-b-2 border-gov-primary bg-blue-50'
-              : 'text-gov-muted hover:text-gov-text border-b-2 border-transparent'
-          }`}
-        >
-          <ShieldCheck size={18} />
-          Admin Login
-        </button>
-      </div>
-      
-      {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
-
-      <form onSubmit={handleLogin} className="space-y-4">
-        <div>
-          <label htmlFor="identifier" className="block text-sm font-medium text-gov-text">
-            {role === 'citizen' ? 'Aadhaar Number / Email ID' : 'Official ID / Email ID'}
-          </label>
-          <input
-            id="identifier"
-            type="text"
-            required
-            value={identifier}
-            onChange={(e) => setIdentifier(e.target.value)}
-            className="input-field mt-1 w-full p-2 border rounded-md focus:ring-2"
-            placeholder={`Enter your ${role === 'citizen' ? 'identifier' : 'official ID'}`}
-          />
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
+        <div className="flex justify-center items-center gap-2 text-3xl font-extrabold text-slate-900 mb-2">
+          <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+            <Activity className="text-primary" />
+          </div>
+          GramSuvidha
         </div>
+        <p className="text-sm text-slate-600">{t('loginTitle')}</p>
+      </div>
 
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gov-text">
-            Password
-          </label>
-          <div className="relative mt-1">
-            <input
-              id="password"
-              type={showPassword ? 'text' : 'password'}
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="input-field w-full p-2 border rounded-md pr-10 focus:ring-2"
-              placeholder="Enter your password"
-            />
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-4 shadow-lg rounded-xl border border-slate-200 sm:px-10">
+          <div className="flex justify-center mb-6 space-x-2 border-b border-slate-200 pb-4">
             <button
               type="button"
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gov-primary"
-              onClick={() => setShowPassword(!showPassword)}
+              onClick={() => setRole('citizen')}
+              className={`px-4 py-2 text-sm font-medium rounded-t-md flex items-center gap-2 transition-colors ${
+                role === 'citizen'
+                  ? 'text-primary border-b-2 border-primary bg-primary/5'
+                  : 'text-slate-500 hover:text-slate-700 border-b-2 border-transparent'
+              }`}
             >
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              <UserCircle size={18} />
+              {t('citizen')} {t('login')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole('admin')}
+              className={`px-4 py-2 text-sm font-medium rounded-t-md flex items-center gap-2 transition-colors ${
+                role === 'admin'
+                  ? 'text-primary border-b-2 border-primary bg-primary/5'
+                  : 'text-slate-500 hover:text-slate-700 border-b-2 border-transparent'
+              }`}
+            >
+              <ShieldCheck size={18} />
+              {t('pAdmin')} {t('login')}
             </button>
           </div>
-        </div>
+          
+          {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm font-semibold">{error}</div>}
 
-        <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center">
-            <input
-              id="remember-me"
-              name="remember-me"
-              type="checkbox"
-              className="h-4 w-4 text-gov-primary border-gray-300 rounded focus:ring-0"
-            />
-            <label htmlFor="remember-me" className="ml-2 block text-gov-text">
-              Remember me
-            </label>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label htmlFor="identifier" className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                {role === 'citizen' ? t('email') : t('email')}
+              </label>
+              <input
+                id="identifier"
+                type="email"
+                required
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                className="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-white"
+                placeholder="you@example.com"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                {t('password')}
+              </label>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-white pr-10"
+                  placeholder="Enter your password"
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-primary"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center">
+                <input
+                  id="remember-me"
+                  name="remember-me"
+                  type="checkbox"
+                  className="h-4 w-4 text-primary border-slate-300 rounded focus:ring-primary"
+                />
+                <label htmlFor="remember-me" className="ml-2 block text-slate-600 text-xs font-medium">
+                  {t('rememberMe')}
+                </label>
+              </div>
+
+              <Link to="/forgot-password" className="text-xs font-bold text-primary hover:underline">
+                {t('forgotPass')}
+              </Link>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 bg-primary text-white rounded-lg font-bold hover:bg-primary-dark shadow-sm flex justify-center items-center gap-2 mt-6 transition-colors disabled:opacity-50"
+            >
+              <LogIn size={20} />
+              {loading ? t('loginBtn') + '...' : t('loginBtn')}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center text-xs text-slate-500 font-medium">
+            {t('newToGram')}{' '}
+            <Link to="/signup" className="font-bold text-primary hover:underline">
+              {t('registerHere')}
+            </Link>
           </div>
-
-          <Link to="/forgot-password" className="font-medium text-gov-primary hover:text-gov-blue">
-            Forgot password?
-          </Link>
         </div>
-
-        <button
-          type="submit"
-          className="btn-primary w-full flex justify-center items-center gap-2 mt-6 py-3"
-        >
-          <LogIn size={20} />
-          Sign In
-        </button>
-      </form>
-
-      {role === 'citizen' && (
-        <div className="mt-6 text-center text-sm">
-          <span className="text-gov-muted">New to Gram-Suvidha AI? </span>
-          <Link to="/signup" className="font-medium text-gov-primary hover:text-gov-blue underline">
-            Register Here
-          </Link>
-        </div>
-      )}
+      </div>
     </div>
   );
 };

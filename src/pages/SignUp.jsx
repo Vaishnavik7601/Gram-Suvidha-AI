@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Activity } from 'lucide-react';
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -8,7 +8,6 @@ const SignUp = () => {
     firstName: '',
     lastName: '',
     age: '',
-    aadhaar: '',
     phone: '',
     email: '',
     password: '',
@@ -18,6 +17,7 @@ const SignUp = () => {
     villageId: '',
   });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const validatePassword = (password) => {
     // > 6 characters, numbers, special characters, underscore, one capital letter
@@ -54,8 +54,10 @@ const SignUp = () => {
       return;
     }
 
+    setLoading(true);
+
     try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
+      const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -72,110 +74,198 @@ const SignUp = () => {
 
       const data = await response.json();
       if (response.ok) {
-        // Store token and navigate based on role
         localStorage.setItem('token', data.token);
         localStorage.setItem('role', data.role);
+        localStorage.setItem('user', JSON.stringify({ name: data.name, email: data.email, _id: data._id }));
+        
         if (data.role === 'admin') {
           navigate('/admin/dashboard');
         } else {
-          navigate('/citizen/dashboard');
+          navigate('/');
         }
       } else {
         setError(data.message || 'Registration failed.');
       }
     } catch (err) {
       setError('Network error. Is the backend running?');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="card w-full shadow-xl">
-      <h3 className="text-xl font-semibold text-center text-gov-text mb-6 border-b pb-4">Gram Suvidha Registration</h3>
-      
-      {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
+        <div className="flex justify-center items-center gap-2 text-3xl font-extrabold text-slate-900 mb-2">
+          <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+            <Activity className="text-primary" />
+          </div>
+          GramSuvidha
+        </div>
+        <p className="text-sm text-slate-600">Register a new citizen or admin account</p>
+      </div>
 
-      <form onSubmit={handleSignUp} className="space-y-4">
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gov-text mb-2">Select Registration Type</label>
-          <div className="flex gap-4">
-            <label className="flex items-center gap-2 cursor-pointer border p-3 rounded-lg w-full justify-center transition-colors hover:bg-slate-50 aria-selected:border-gov-primary aria-selected:bg-blue-50" aria-selected={formData.role === 'citizen'}>
-              <input type="radio" name="role" value="citizen" className="text-gov-primary focus:ring-gov-primary" checked={formData.role === 'citizen'} onChange={handleChange} />
-              <span className="font-semibold text-slate-700">Citizen</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer border p-3 rounded-lg w-full justify-center transition-colors hover:bg-slate-50 aria-selected:border-gov-primary aria-selected:bg-blue-50" aria-selected={formData.role === 'admin'}>
-              <input type="radio" name="role" value="admin" className="text-gov-primary focus:ring-gov-primary" checked={formData.role === 'admin'} onChange={handleChange} />
-              <span className="font-semibold text-slate-700">Panchayat Admin</span>
-            </label>
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-4 shadow-lg rounded-xl border border-slate-200 sm:px-10">
+          {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm font-semibold">{error}</div>}
+
+          <form onSubmit={handleSignUp} className="space-y-4">
+            <div className="mb-4">
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Registration Type</label>
+              <div className="flex gap-4">
+                <label className={`flex items-center gap-2 cursor-pointer border p-3 rounded-lg w-full justify-center transition-colors ${
+                  formData.role === 'citizen' ? 'border-primary bg-primary/5 text-primary' : 'border-slate-250 text-slate-700 hover:bg-slate-50'
+                }`}>
+                  <input type="radio" name="role" value="citizen" className="text-primary focus:ring-primary hidden" checked={formData.role === 'citizen'} onChange={handleChange} />
+                  <span className="font-semibold text-sm">Citizen</span>
+                </label>
+                <label className={`flex items-center gap-2 cursor-pointer border p-3 rounded-lg w-full justify-center transition-colors ${
+                  formData.role === 'admin' ? 'border-primary bg-primary/5 text-primary' : 'border-slate-250 text-slate-700 hover:bg-slate-50'
+                }`}>
+                  <input type="radio" name="role" value="admin" className="text-primary focus:ring-primary hidden" checked={formData.role === 'admin'} onChange={handleChange} />
+                  <span className="font-semibold text-sm">Panchayat Admin</span>
+                </label>
+              </div>
+            </div>
+
+            {formData.role === 'admin' && (
+              <div className="mb-4 bg-orange-50 border border-orange-100 p-4 rounded-xl">
+                <label className="block text-xs font-bold text-orange-700 uppercase tracking-wider mb-2">Official Panchayat / Village ID</label>
+                <input 
+                  type="text" 
+                  name="villageId" 
+                  required 
+                  className="w-full border border-orange-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 bg-white" 
+                  placeholder="e.g. VIL-10293" 
+                  onChange={handleChange} 
+                  value={formData.villageId} 
+                />
+                <p className="text-[10px] text-orange-600 font-medium mt-2">Required for administrative verification.</p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">First Name</label>
+                <input 
+                  type="text" 
+                  name="firstName" 
+                  required 
+                  className="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-white" 
+                  placeholder="Raj" 
+                  onChange={handleChange} 
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Last Name</label>
+                <input 
+                  type="text" 
+                  name="lastName" 
+                  required 
+                  className="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-white" 
+                  placeholder="Kumar" 
+                  onChange={handleChange} 
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Age</label>
+                <input 
+                  type="number" 
+                  name="age" 
+                  required 
+                  min="1" 
+                  className="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-white" 
+                  placeholder="30" 
+                  onChange={handleChange} 
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Mobile Number</label>
+                <input 
+                  type="tel" 
+                  name="phone" 
+                  required 
+                  className="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-white" 
+                  placeholder="10 digit number" 
+                  onChange={handleChange} 
+                  maxLength="10" 
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Email Address</label>
+                <input 
+                  type="email" 
+                  name="email" 
+                  required 
+                  className="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-white" 
+                  placeholder="raj.kumar@example.com" 
+                  onChange={handleChange} 
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Gender</label>
+                <select 
+                  name="gender" 
+                  required 
+                  className="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-white" 
+                  onChange={handleChange} 
+                  value={formData.gender}
+                >
+                  <option value="" disabled>Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Password</label>
+              <input 
+                type="password" 
+                name="password" 
+                required 
+                className="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-white" 
+                placeholder="Create secure password" 
+                onChange={handleChange} 
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Confirm Password</label>
+              <input 
+                type="password" 
+                name="confirmPassword" 
+                required 
+                className="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-white" 
+                placeholder="Confirm password" 
+                onChange={handleChange} 
+              />
+            </div>
+
+            <button 
+              type="submit" 
+              disabled={loading}
+              className="w-full py-3 bg-primary text-white rounded-lg font-bold hover:bg-primary-dark shadow-sm flex justify-center items-center gap-2 mt-6 transition-colors disabled:opacity-50"
+            >
+              <UserPlus size={20} />
+              {loading ? 'Registering...' : 'Register Now'}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center text-xs text-slate-500 font-medium">
+            Already registered?{' '}
+            <Link to="/login" className="font-bold text-primary hover:underline">
+              Login Here
+            </Link>
           </div>
         </div>
-
-        {formData.role === 'admin' && (
-          <div className="mb-4 bg-orange-50 border border-orange-200 p-4 rounded-xl">
-            <label className="block text-sm font-medium text-slate-800 mb-1">Official Panchayat / Village ID</label>
-            <input type="text" name="villageId" required className="input-field bg-white" placeholder="e.g. VIL-10293" onChange={handleChange} value={formData.villageId} />
-            <p className="text-xs text-slate-500 mt-2">Required for administrative verification.</p>
-          </div>
-        )}
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gov-text">First Name</label>
-            <input type="text" name="firstName" required className="input-field" placeholder="Raj" onChange={handleChange} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gov-text">Last Name</label>
-            <input type="text" name="lastName" required className="input-field" placeholder="Kumar" onChange={handleChange} />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gov-text">Age</label>
-            <input type="number" name="age" required min="1" className="input-field w-full" placeholder="e.g. 30" onChange={handleChange} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gov-text">Mobile Number</label>
-            <input type="tel" name="phone" required className="input-field w-full" placeholder="10 Digit Number" onChange={handleChange} maxLength="10" />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gov-text">Email Address</label>
-            <input type="email" name="email" required className="input-field w-full" placeholder="raj.kumar@example.com" onChange={handleChange} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gov-text">Gender</label>
-            <select name="gender" required className="input-field w-full" onChange={handleChange} value={formData.gender}>
-              <option value="" disabled>Select Gender</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gov-text">Password</label>
-          <input type="password" name="password" required className="input-field w-full" placeholder="Create a secure password" onChange={handleChange} />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gov-text">Confirm Password</label>
-          <input type="password" name="confirmPassword" required className="input-field w-full" placeholder="Confirm your password" onChange={handleChange} />
-        </div>
-
-        <button type="submit" className="btn-primary w-full flex justify-center items-center gap-2 mt-6 py-3">
-          <UserPlus size={20} />
-          Register Now
-        </button>
-      </form>
-
-      <div className="mt-6 text-center text-sm">
-        <span className="text-gov-muted">Already registered? </span>
-        <Link to="/login" className="font-medium text-gov-primary hover:text-gov-blue underline">
-          Login Here
-        </Link>
       </div>
     </div>
   );

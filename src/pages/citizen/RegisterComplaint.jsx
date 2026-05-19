@@ -1,163 +1,211 @@
-import { useState } from 'react';
-import { Droplet, Zap, Tractor, Users, AlertCircle, FileWarning, ArrowRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Shield, Upload, MapPin, Navigation, CheckCircle } from 'lucide-react';
 
 const RegisterComplaint = () => {
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  const navigate = useNavigate();
+  const [category, setCategory] = useState('water_leakage');
   const [description, setDescription] = useState('');
-  const [subject, setSubject] = useState('');
-  const [location, setLocation] = useState('');
-  const [nlpWarning, setNlpWarning] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [address, setAddress] = useState('Bengeri, Vishweshwara Nagar, Hubli, Hubballi Urban Taluka, Dharwad, Karnataka, 580020, India');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
 
-  const categories = [
-    { id: 'water', name: 'Water & Sanitation', icon: Droplet, color: 'text-blue-500', bg: 'bg-blue-50' },
-    { id: 'electricity', name: 'Electricity & Lighting', icon: Zap, color: 'text-yellow-500', bg: 'bg-yellow-50' },
-    { id: 'roads', name: 'Roads & Infrastructure', icon: Tractor, color: 'text-orange-500', bg: 'bg-orange-50' },
-    { id: 'welfare', name: 'Welfare & Benefits', icon: Users, color: 'text-purple-500', bg: 'bg-purple-50' },
-    { id: 'other', name: 'Other Issues', icon: AlertCircle, color: 'text-slate-500', bg: 'bg-slate-50' },
-  ];
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setMessage('');
+
+    if (!description.trim()) {
+      setError('Please provide a detailed description of the issue.');
+      return;
+    }
+
+    setLoading(true);
+
+    // Retrieve user _id from localStorage user object
+    let userId = '60d5ec4986b245209c123456'; // Fallback dummy ObjectId
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const userObj = JSON.parse(userStr);
+        if (userObj && userObj._id) {
+          userId = userObj._id;
+        }
+      } catch (err) {
+        console.error("Failed to parse user from local storage", err);
+      }
+    }
+
+    try {
+      const response = await fetch('/api/complaints', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          user: userId,
+          category: category,
+          description: description,
+          location: address
+        })
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setMessage('Complaint registered successfully! Redirecting...');
+        setTimeout(() => {
+          navigate('/citizen/dashboard');
+        }, 1500);
+      } else {
+        setError(data.message || 'Failed to submit complaint.');
+      }
+    } catch (err) {
+      setError('Network error. Is the backend running?');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-          <FileWarning className="text-gov-saffron" />
-          Register a New Complaint
-        </h1>
-        <p className="text-slate-500 mt-1">Select a category to direct your issue to the correct Panchayat department.</p>
+    <div className="max-w-3xl mx-auto space-y-6">
+      <div className="card border-primary/20 bg-primary/5 flex items-center gap-4">
+        <div className="w-12 h-12 rounded-full bg-primary/20 text-primary flex items-center justify-center flex-shrink-0">
+          <Shield size={24} />
+        </div>
+        <div>
+          <h2 className="text-xl font-bold text-slate-800">Register New Complaint</h2>
+          <p className="text-sm text-slate-600 mt-1">Provide detailed information to help our volunteers address the issue.</p>
+        </div>
       </div>
 
-      {!selectedCategory ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {categories.map((cat) => {
-            const Icon = cat.icon;
-            return (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                className="card border-2 border-transparent hover:border-gov-saffron transition-all text-left group hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-gov-saffron focus:ring-offset-2"
-              >
-                <div className={`w-14 h-14 rounded-xl ${cat.bg} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                  <Icon className={cat.color} size={28} />
-                </div>
-                <h3 className="font-bold text-slate-800 text-lg mb-1">{cat.name}</h3>
-                <p className="text-sm text-slate-500 mb-4">Click to report issues related to {cat.name.toLowerCase()}.</p>
+      {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm font-semibold">{error}</div>}
+      {message && <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm font-semibold">{message}</div>}
 
-                <div className="flex items-center text-sm font-semibold text-gov-saffron group-hover:text-orange-600 transition-colors">
-                  Select <ArrowRight size={16} className="ml-1" />
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="card max-w-2xl mx-auto border-t-4 border-t-gov-saffron shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="flex items-center justify-between mb-6 pb-4 border-b">
-            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-              Issue Details
-            </h2>
-            <button
-              onClick={() => { setSelectedCategory(null); setNlpWarning(''); }}
-              className="text-sm text-gov-primary hover:underline hover:text-gov-blue"
+      <form onSubmit={handleSubmit} className="space-y-8">
+        {/* 1. Complaint Details */}
+        <div className="space-y-4">
+          <h3 className="font-bold text-slate-800 flex items-center gap-2">
+            1. Complaint Details
+          </h3>
+          
+          <div>
+            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Issue Category *</label>
+            <select 
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full border border-slate-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none bg-white"
             >
-              Change Category
+              <option value="water_leakage">Water Leakage</option>
+              <option value="road_damage">Road Damage</option>
+              <option value="garbage_dump">Garbage Dump</option>
+              <option value="electricity_issue">Electricity Issue</option>
+              <option value="drainage_issue">Drainage Issue</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Detailed Description *</label>
+            <textarea 
+              rows={4}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Describe the issue in detail. Include landmarks or specific observations."
+              className="w-full border border-slate-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none"
+            ></textarea>
+          </div>
+        </div>
+
+        {/* 2. Visual Evidence */}
+        <div className="space-y-4">
+          <h3 className="font-bold text-slate-800 flex items-center gap-2">
+            2. Visual Evidence & Documentation
+          </h3>
+          
+          <div className="border-2 border-dashed border-slate-300 rounded-xl p-10 flex flex-col items-center justify-center text-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer group">
+            <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center text-slate-400 mb-4 group-hover:scale-110 transition-transform">
+              <Upload size={28} />
+            </div>
+            <div className="font-bold text-slate-800 mb-1">Click to upload photos, videos or documents</div>
+            <div className="text-sm text-slate-500 mb-6">Images (JPG, PNG), Videos (MP4), Documents (PDF, DOC)</div>
+            <div className="text-xs text-slate-400">Up to 5 files (Max 10MB each)</div>
+            
+            <button type="button" className="mt-6 px-6 py-2 bg-white border border-slate-300 rounded-lg text-sm font-bold text-slate-600 shadow-sm hover:bg-slate-50 flex items-center gap-2">
+              <Upload size={16} /> Browse Files
+            </button>
+          </div>
+        </div>
+
+        {/* 3. Location Information */}
+        <div className="space-y-4">
+          <h3 className="font-bold text-slate-800 flex items-center gap-2">
+            3. Location Information
+          </h3>
+          
+          <div className="flex rounded-lg overflow-hidden border border-slate-200 p-1 bg-slate-100">
+            <button type="button" className="flex-1 py-2 text-sm font-bold bg-white rounded-md shadow-sm text-slate-800 flex justify-center items-center gap-2">
+              <Navigation size={16} /> Current GPS
+            </button>
+            <button type="button" className="flex-1 py-2 text-sm font-bold text-slate-500 hover:text-slate-700 flex justify-center items-center gap-2">
+              <MapPin size={16} /> Manual Entry
             </button>
           </div>
 
-          {nlpWarning && (
-            <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4" role="alert">
-              <p className="font-bold">AI Suggestion</p>
-              <p>{nlpWarning}</p>
+          <button type="button" className="w-full py-3 bg-primary text-white rounded-lg font-bold text-sm flex items-center justify-center gap-2 shadow-sm hover:bg-primary-dark transition-colors">
+            <Navigation size={16} /> Auto-Detect My Location
+          </button>
+
+          <div className="relative h-48 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 flex items-center justify-center">
+            {/* Map placeholder */}
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+            <div className="relative z-10 flex flex-col items-center">
+              <div className="w-8 h-8 text-red-500 mb-2 drop-shadow-md">
+                <MapPin size={32} />
+              </div>
+              <div className="bg-white px-4 py-2 rounded-lg shadow-md text-xs font-bold text-slate-700 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> LIVE DATA
+              </div>
             </div>
-          )}
-
-          <form className="space-y-5" onSubmit={async (e) => {
-            e.preventDefault();
-            setIsSubmitting(true);
-            setNlpWarning('');
-
-            try {
-              // 1. NLP Validation
-              let nlpData = { is_valid: true, warning: '' };
-              try {
-                const nlpRes = await fetch('http://localhost:8000/analyze-complaint', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ category: selectedCategory, description })
-                });
-
-                if (nlpRes.ok) {
-                  nlpData = await nlpRes.json();
-                }
-              } catch (nlpErr) {
-                console.warn("ML Service unreachable, skipping validation", nlpErr);
-              }
-
-              if (!nlpData.is_valid) {
-                setNlpWarning(nlpData.warning);
-                setIsSubmitting(false);
-                return; // Stop submission to let user fix it
-              }
-
-              // 2. Submit to Node API
-              const res = await fetch('http://localhost:5000/api/complaints', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  user: localStorage.getItem('userId') || '60d0fe4f5311236168a109ca', // mock user ID for now
-                  category: selectedCategory,
-                  description: `${subject}: ${description}`,
-                  location
-                })
-              });
-
-              if (res.ok) {
-                alert("Complaint registered successfully!");
-                setSelectedCategory(null);
-                setDescription('');
-                setSubject('');
-                setLocation('');
-              } else {
-                const errorData = await res.json();
-                alert(`Failed to register complaint: ${errorData.message || 'Unknown error'}`);
-              }
-            } catch (err) {
-              console.error("Submission error:", err);
-              alert("Network error: Could not connect to the server. Please ensure the backend is running.");
-            } finally {
-              setIsSubmitting(false);
-            }
-          }}>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Issue Subject</label>
-              <input type="text" className="input-field w-full" placeholder="Brief title of the problem" value={subject} onChange={(e) => setSubject(e.target.value)} required />
+            
+            <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-sm p-3 rounded-lg border border-slate-200 shadow-sm">
+              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">DETECTED LOCATION</div>
+              <div className="text-xs font-medium text-slate-800 truncate">{address}</div>
             </div>
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Detailed Description</label>
-              <textarea
-                className="input-field w-full min-h-[120px] resize-y"
-                placeholder="Explain the issue in detail. Our AI will automatically analyze this to determine the urgency."
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                required
-              ></textarea>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Location / Ward</label>
-              <input type="text" className="input-field w-full" placeholder="e.g. Ward 4, Near Primary School" value={location} onChange={(e) => setLocation(e.target.value)} required />
-            </div>
-
-            <div className="pt-4 flex items-center justify-between">
-              <span className="text-xs text-slate-500 italic max-w-[200px]">By submitting, you agree to let our AI process this text for categorization.</span>
-              <button type="submit" disabled={isSubmitting} className="btn-primary px-8 flex items-center gap-2 disabled:opacity-50">
-                {isSubmitting ? 'Processing...' : 'Submit Complaint'} <ArrowRight size={16} />
-              </button>
-            </div>
-          </form>
+          <div>
+            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Final Verified Address</label>
+            <input 
+              type="text" 
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              className="w-full border border-slate-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-white"
+            />
+          </div>
         </div>
-      )}
+
+        <div className="pt-6 border-t border-slate-200 flex flex-col sm:flex-row gap-4">
+          <button 
+            type="button" 
+            onClick={() => navigate('/citizen/dashboard')}
+            className="px-6 py-3 border border-slate-300 rounded-lg font-bold text-slate-600 hover:bg-slate-50 sm:w-1/3"
+          >
+            Cancel
+          </button>
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="px-6 py-3 bg-primary text-white rounded-lg font-bold hover:bg-primary-dark shadow-sm sm:w-2/3 flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+          >
+            <CheckCircle size={18} /> {loading ? 'Registering...' : 'Register Complaint'}
+          </button>
+        </div>
+        
+        <p className="text-center text-xs text-slate-500 flex items-center justify-center gap-1.5 mt-4">
+          <Shield size={12} /> Your IP address and location will be logged for verification.
+        </p>
+      </form>
     </div>
   );
 };

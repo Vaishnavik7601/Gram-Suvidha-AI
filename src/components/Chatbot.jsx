@@ -1,203 +1,216 @@
-import { useState, useRef, useEffect } from 'react';
-import { MessageSquare, X, Send } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from 'react';
+import { MessageSquare, X, Send, Bot, User, Sparkles } from 'lucide-react';
 
-const Chatbot = ({ inline = false }) => {
-  const [isOpen, setIsOpen] = useState(inline);
+const Chatbot = () => {
+  const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { text: "Welcome to Gram Suvidha AI Assistant.\nAre you already registered with Gram Suvidha? (Type 'Yes' or 'No')", isBot: true }
+    {
+      id: 1,
+      sender: 'bot',
+      text: 'Namaste! I am Suvidha AI, your digital village assistant. How can I help you today?',
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    },
   ]);
-  const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [chatStep, setChatStep] = useState('registration'); // registration -> menu -> query/status
+  const [inputText, setInputText] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
-  const navigate = useNavigate();
+
+  const suggestions = [
+    'How do I file a complaint?',
+    'What schemes can I apply for?',
+    'How does complaint tracking work?',
+  ];
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
-    if (isOpen) {
-      scrollToBottom();
-    }
-  }, [messages, isOpen]);
+    scrollToBottom();
+  }, [messages, isTyping]);
 
-  const handleLogic = async (userInput) => {
-    const text = userInput.trim().toLowerCase();
-    
-    if (chatStep === 'registration') {
-      if (text === 'no') {
-        setChatStep('reg_flow');
-        return {
-          text: "You can create a new account by clicking the button below. Once registered, return here and type 'menu' to continue.",
-          link: { url: "/signup", label: "Register Now" }
-        };
-      } else if (text === 'yes') {
-        setChatStep('menu');
-        return "Great! Please choose an option from the Main Menu:\n1. Raise Complaint\n2. Ask Query\n3. Check Status";
-      }
-      return "Please answer with 'Yes' or 'No'.";
-    }
+  const handleSend = async (text) => {
+    if (!text.trim()) return;
 
-    if (chatStep === 'reg_flow') {
-      if (text === 'menu') {
-        setChatStep('menu');
-        return "Main Menu:\n1. Raise Complaint\n2. Ask Query\n3. Check Status";
-      }
-      return {
-        text: "Please navigate to the registration page using the button below. Type 'menu' to go to the main menu.",
-        link: { url: "/signup", label: "Register Now" }
-      };
-    }
+    // Add user message
+    const userMsg = {
+      id: Date.now(),
+      sender: 'user',
+      text: text,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
 
-    if (chatStep === 'menu') {
-      if (text === '1' || text.includes('complaint')) {
-        return "To raise a complaint, please use the 'Register Complaint' button on your dashboard. Type 'menu' to see options again.";
-      } else if (text === '2' || text.includes('query')) {
-        setChatStep('query');
-        return "You have selected 'Ask Query'.\n\nHere are some examples of what you can ask:\n- What is the eligibility for PM Awas Yojana?\n- How do I apply for a water connection?\n- Tell me about MGNREGA benefits.\n\nPlease type your question below, and I will assist you.";
-      } else if (text === '3' || text.includes('status')) {
-        setChatStep('status');
-        return "Please enter your Complaint ID (e.g. COMP-1234) to check its status.";
-      }
-      return "Invalid option. Please choose:\n1. Raise Complaint\n2. Ask Query\n3. Check Status";
-    }
+    setMessages((prev) => [...prev, userMsg]);
+    setInputText('');
+    setIsTyping(true);
 
-    if (chatStep === 'status') {
-      if (text === 'menu') {
-        setChatStep('menu');
-        return "Main Menu:\n1. Raise Complaint\n2. Ask Query\n3. Check Status";
-      }
-      return `Checking status for ${userInput.toUpperCase()}...\nStatus: IN PROGRESS. (This is a system generated response). Type 'menu' to go back.`;
-    }
+    // Simulate AI response delay
+    setTimeout(() => {
+      let botResponse = '';
+      const query = text.toLowerCase();
 
-    if (chatStep === 'query') {
-      if (text === 'menu') {
-        setChatStep('menu');
-        return "Main Menu:\n1. Raise Complaint\n2. Ask Query\n3. Check Status";
+      if (query.includes('complaint') || query.includes('file') || query.includes('report')) {
+        botResponse = 'To file a complaint: \n1. Log in or Register a citizen account.\n2. Click "Report a Complaint" in the menu or sidebar.\n3. Fill in the title, description, category, and pin location.\n4. Upload a photo of the issue for verification.\nOur Panchayat admins will verify it and assign a field worker within 24 hours.';
+      } else if (query.includes('scheme') || query.includes('yojana') || query.includes('apply')) {
+        botResponse = 'You can browse active rural development schemes under the "Schemes" section. We support various programs including Jal Jeevan Mission, Pradhan Mantri Awas Yojana, and local infrastructure projects. You can apply directly through the schemes dashboard.';
+      } else if (query.includes('track') || query.includes('status') || query.includes('progress')) {
+        botResponse = 'Once you file a complaint, it is updated dynamically. Go to your dashboard to view its status:\n- Pending: Under review by Panchayat admin\n- Assigned: Field agent is dispatched\n- Resolved: Issue rectified with completion proof uploaded.';
+      } else if (query.includes('hello') || query.includes('hi') || query.includes('hey') || query.includes('namaste')) {
+        botResponse = 'Hello! I can guide you on registering complaints, checking scheme eligibility, and tracking civic issues. What would you like to know?';
+      } else {
+        botResponse = 'I apologize, I am still learning. You can easily file a complaint, track civic issues, or apply for schemes using the navigation bar. Let me know if you need assistance with registration!';
       }
-      
-      // Call actual backend for query
-      setIsLoading(true);
-      try {
-        const res = await fetch('http://localhost:8000/chatbot', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query: userInput })
-        });
-        const data = await res.json();
-        setIsLoading(false);
-        return data.response + "\n\n(Type 'menu' to return to Main Menu)";
-      } catch (err) {
-        setIsLoading(false);
-        return "Sorry, I am having trouble connecting to the AI server right now. Type 'menu' to go back.";
-      }
-    }
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          sender: 'bot',
+          text: botResponse,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        },
+      ]);
+      setIsTyping(false);
+    }, 1200);
   };
-
-  const sendMessage = async (e) => {
-    e.preventDefault();
-    if (!input.trim()) return;
-
-    const userMessage = { text: input, isBot: false };
-    setMessages(prev => [...prev, userMessage]);
-    setInput("");
-    
-    // Check if we need to show loading
-    if (chatStep === 'query' && input.trim().toLowerCase() !== 'menu') {
-      setIsLoading(true);
-    }
-
-    const botResponse = await handleLogic(input);
-    
-    if (typeof botResponse === 'string') {
-      setMessages(prev => [...prev, { text: botResponse, isBot: true }]);
-    } else {
-      setMessages(prev => [...prev, { text: botResponse.text, isBot: true, link: botResponse.link }]);
-    }
-  };
-
-  const containerClasses = inline 
-    ? "w-full h-full bg-white flex flex-col overflow-hidden"
-    : `fixed bottom-6 right-6 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl flex flex-col z-50 transition-all origin-bottom-right border border-slate-200 overflow-hidden ${isOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0 pointer-events-none'}`;
 
   return (
-    <>
-      {/* Floating Action Button */}
-      {!inline && (
-        <button 
+    <div className="fixed bottom-6 right-6 z-50 font-sans">
+      {/* Toggle Button */}
+      {!isOpen && (
+        <button
           onClick={() => setIsOpen(true)}
-          className={`fixed bottom-6 right-6 w-14 h-14 bg-gov-blue text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-800 transition-all z-40 ${isOpen ? 'scale-0' : 'scale-100'}`}
+          className="w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-lg hover:bg-primary-dark transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-primary/30"
+          title="Open Suvidha AI Assistant"
         >
           <MessageSquare size={24} />
         </button>
       )}
 
       {/* Chat Window */}
-      <div className={containerClasses}>
-        
-        {/* Header */}
-        <div className="bg-gradient-to-r from-gov-blue to-blue-800 p-4 text-white flex items-center justify-between shadow-md z-10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-              <MessageSquare size={20} />
+      {isOpen && (
+        <div className="w-80 md:w-96 h-[500px] bg-white rounded-2xl border border-slate-200 shadow-2xl flex flex-col overflow-hidden transition-all duration-300 transform scale-100 origin-bottom-right">
+          {/* Header */}
+          <div className="bg-primary text-white p-4 flex items-center justify-between shadow-md">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 bg-white/10 rounded-lg flex items-center justify-center backdrop-blur-sm border border-white/20">
+                <Bot size={20} className="text-white" />
+              </div>
+              <div>
+                <h3 className="font-bold text-sm leading-tight flex items-center gap-1.5">
+                  Suvidha AI <Sparkles size={13} className="text-amber-300 animate-pulse" />
+                </h3>
+                <span className="text-[10px] text-blue-100 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-ping"></span>
+                  Online Assistant
+                </span>
+              </div>
             </div>
-            <div>
-              <span className="font-bold block leading-tight">Gram Suvidha AI</span>
-              <span className="text-xs text-blue-200 block">Always online</span>
-            </div>
-          </div>
-          {!inline && (
-            <button onClick={() => setIsOpen(false)} className="text-white hover:text-blue-200 bg-white/10 p-2 rounded-full hover:bg-white/20 transition-colors">
+            <button
+              onClick={() => setIsOpen(false)}
+              className="text-white/80 hover:text-white transition-colors"
+            >
               <X size={20} />
             </button>
-          )}
-        </div>
+          </div>
 
-        {/* Messages */}
-        <div className="flex-1 p-4 overflow-y-auto bg-slate-50 flex flex-col gap-3">
-          <div className="text-center text-xs text-slate-400 mb-4 mt-2">Today</div>
-          {messages.map((msg, idx) => (
-            <div key={idx} className={`max-w-[85%] rounded-2xl p-3 text-sm shadow-sm whitespace-pre-line leading-relaxed ${msg.isBot ? 'bg-white border border-slate-200 text-slate-700 self-start rounded-tl-sm' : 'bg-gov-blue text-white self-end rounded-tr-sm'}`}>
-              {msg.text}
-              {msg.link && (
-                <div className="mt-3 mb-1">
-                  <button 
-                    onClick={() => navigate(msg.link.url)}
-                    className="inline-block bg-gov-saffron text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-orange-600 transition-colors w-full sm:w-auto text-center"
-                  >
-                    {msg.link.label}
-                  </button>
+          {/* Messages List */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
+            {messages.map((msg) => (
+              <div
+                key={msg.id}
+                className={`flex gap-2.5 ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}
+              >
+                {/* Avatar */}
+                <div
+                  className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${
+                    msg.sender === 'user'
+                      ? 'bg-blue-100 text-primary'
+                      : 'bg-primary/10 text-primary border border-primary/20'
+                  }`}
+                >
+                  {msg.sender === 'user' ? <User size={14} /> : <Bot size={14} />}
                 </div>
-              )}
-            </div>
-          ))}
-          {isLoading && (
-             <div className="bg-white border border-slate-200 text-slate-500 self-start rounded-2xl rounded-tl-sm p-4 text-sm shadow-sm flex items-center gap-2">
-               <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
-               <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-               <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></div>
-             </div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
 
-        {/* Input */}
-        <form onSubmit={sendMessage} className="p-4 bg-white border-t border-slate-100 flex items-center gap-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-          <input 
-            type="text" 
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your message..." 
-            className="flex-1 bg-slate-100 rounded-full px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gov-blue/50 transition-all border border-transparent focus:border-gov-blue"
-          />
-          <button type="submit" className="w-12 h-12 bg-gov-blue text-white rounded-full flex items-center justify-center hover:bg-blue-800 disabled:opacity-50 transition-colors shadow-md disabled:shadow-none" disabled={!input.trim()}>
-            <Send size={18} className="-ml-1" />
-          </button>
-        </form>
-      </div>
-    </>
+                {/* Message Bubble */}
+                <div className="max-w-[75%]">
+                  <div
+                    className={`p-3 rounded-2xl text-xs leading-relaxed shadow-sm whitespace-pre-line ${
+                      msg.sender === 'user'
+                        ? 'bg-primary text-white rounded-tr-none'
+                        : 'bg-white text-slate-800 border border-slate-150 rounded-tl-none'
+                    }`}
+                  >
+                    {msg.text}
+                  </div>
+                  <span
+                    className={`text-[9px] text-slate-400 mt-1 block ${
+                      msg.sender === 'user' ? 'text-right' : ''
+                    }`}
+                  >
+                    {msg.time}
+                  </span>
+                </div>
+              </div>
+            ))}
+
+            {/* Typing Indicator */}
+            {isTyping && (
+              <div className="flex gap-2.5">
+                <div className="w-7 h-7 rounded-full bg-primary/10 text-primary border border-primary/20 flex items-center justify-center flex-shrink-0">
+                  <Bot size={14} />
+                </div>
+                <div className="bg-white border border-slate-150 rounded-2xl rounded-tl-none p-3 shadow-sm flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></span>
+                  <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:0.2s]"></span>
+                  <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:0.4s]"></span>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Quick Suggestions */}
+          {messages.length === 1 && (
+            <div className="px-4 py-2 bg-slate-50 border-t border-slate-100 flex flex-wrap gap-1.5">
+              {suggestions.map((sug, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleSend(sug)}
+                  className="text-[10px] bg-white hover:bg-primary hover:text-white border border-slate-200 text-slate-600 rounded-full px-2.5 py-1 transition-all"
+                >
+                  {sug}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Chat Input */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSend(inputText);
+            }}
+            className="p-3 border-t border-slate-200 bg-white flex gap-2"
+          >
+            <input
+              type="text"
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              placeholder="Ask Suvidha AI..."
+              className="flex-1 text-xs border border-slate-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-white text-slate-800"
+            />
+            <button
+              type="submit"
+              disabled={!inputText.trim()}
+              className="w-9 h-9 bg-primary disabled:opacity-40 text-white rounded-xl flex items-center justify-center hover:bg-primary-dark transition-colors"
+            >
+              <Send size={14} />
+            </button>
+          </form>
+        </div>
+      )}
+    </div>
   );
 };
 

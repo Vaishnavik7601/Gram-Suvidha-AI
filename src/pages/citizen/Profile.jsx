@@ -10,7 +10,7 @@ const Profile = () => {
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/auth/profile', {
+        const response = await fetch('/api/auth/profile', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -20,7 +20,7 @@ const Profile = () => {
           const data = await response.json();
           setProfileData(data);
         } else {
-          setError('Failed to fetch profile data');
+          setError('Failed to fetch profile data. Please log in again.');
         }
       } catch (err) {
         setError('Network error. Is the backend running?');
@@ -35,21 +35,21 @@ const Profile = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gov-saffron"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-        <strong className="font-bold">Error!</strong>
-        <span className="block sm:inline"> {error}</span>
+      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg relative" role="alert">
+        <strong className="font-bold">Error! </strong>
+        <span className="block sm:inline">{error}</span>
       </div>
     );
   }
 
-  const { user, applications } = profileData;
+  const { user, applications } = profileData || { user: { name: 'John Doe', email: 'john@example.com', phone: '1234567890', age: 30, role: 'citizen' }, applications: [] };
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -69,8 +69,8 @@ const Profile = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
-      <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2 mb-6">
-        <User className="text-gov-saffron" />
+      <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-2 mb-6">
+        <User className="text-primary" />
         My Profile
       </h1>
 
@@ -79,15 +79,15 @@ const Profile = () => {
         <div className="md:col-span-1 space-y-6">
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 text-center group">
             <div className="relative w-32 h-32 mx-auto mb-4">
-              <div className="w-32 h-32 bg-gov-saffron rounded-full flex items-center justify-center text-white text-4xl font-bold border-4 border-orange-50 overflow-hidden shadow-inner">
+              <div className="w-32 h-32 bg-primary rounded-full flex items-center justify-center text-white text-4xl font-bold border-4 border-blue-50 overflow-hidden shadow-inner">
                 {user.profilePhoto ? (
-                  <img src={`http://localhost:5000${user.profilePhoto}`} alt={user.name} className="w-full h-full object-cover" />
+                  <img src={user.profilePhoto} alt={user.name} className="w-full h-full object-cover" />
                 ) : (
-                  user.name.charAt(0)
+                  user.name ? user.name.charAt(0) : 'U'
                 )}
               </div>
               <label className="absolute bottom-1 right-1 bg-white p-2 rounded-full shadow-md border border-slate-100 cursor-pointer hover:bg-slate-50 transition-colors group-hover:scale-110">
-                <User size={16} className="text-gov-saffron" />
+                <User size={16} className="text-primary" />
                 <input 
                   type="file" 
                   className="hidden" 
@@ -100,14 +100,13 @@ const Profile = () => {
                       
                       try {
                         const token = localStorage.getItem('token');
-                        const res = await fetch('http://localhost:5000/api/auth/profile/photo', {
+                        const res = await fetch('/api/auth/profile/photo', {
                           method: 'POST',
                           headers: { 'Authorization': `Bearer ${token}` },
                           body: formData
                         });
                         
                         if (res.ok) {
-                          const data = await res.json();
                           window.location.reload(); 
                         } else {
                           const errorData = await res.json();
@@ -127,26 +126,26 @@ const Profile = () => {
           </div>
 
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
-            <h3 className="font-bold text-slate-800 border-b pb-2 text-sm uppercase tracking-wider">Basic Information</h3>
+            <h3 className="font-bold text-slate-800 border-b pb-2 text-xs uppercase tracking-wider">Basic Information</h3>
             <div className="flex items-center gap-3 text-slate-600">
-              <Mail size={18} className="text-gov-saffron" />
+              <Mail size={18} className="text-primary" />
               <div className="text-sm">
-                <p className="text-xs text-slate-400">Email</p>
-                <p className="font-medium">{user.email}</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Email</p>
+                <p className="font-semibold text-slate-800">{user.email}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 text-slate-600">
-              <Phone size={18} className="text-gov-saffron" />
+              <Phone size={18} className="text-primary" />
               <div className="text-sm">
-                <p className="text-xs text-slate-400">Phone</p>
-                <p className="font-medium">{user.phone}</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Phone</p>
+                <p className="font-semibold text-slate-800">{user.phone}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 text-slate-600">
-              <Calendar size={18} className="text-gov-saffron" />
+              <Calendar size={18} className="text-primary" />
               <div className="text-sm">
-                <p className="text-xs text-slate-400">Age</p>
-                <p className="font-medium">{user.age || 'Not set'}</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Age</p>
+                <p className="font-semibold text-slate-800">{user.age || 'Not set'}</p>
               </div>
             </div>
           </div>
@@ -155,12 +154,12 @@ const Profile = () => {
         {/* Applications List */}
         <div className="md:col-span-2">
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+            <div className="p-6 border-b border-slate-150 flex justify-between items-center bg-slate-50/50">
               <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                <ClipboardList className="text-gov-saffron" size={20} />
+                <ClipboardList className="text-primary" size={20} />
                 My Scheme Applications
               </h3>
-              <span className="text-xs font-bold px-2 py-1 bg-gov-saffron/10 text-gov-saffron rounded-full">
+              <span className="text-xs font-bold px-2 py-1 bg-primary/10 text-primary rounded-full">
                 {applications.length} Total
               </span>
             </div>
@@ -185,13 +184,13 @@ const Profile = () => {
               ) : (
                 <div className="p-12 text-center text-slate-500">
                   <ClipboardList size={48} className="mx-auto mb-4 opacity-20" />
-                  <p>You haven't applied for any schemes yet.</p>
-                  <button 
-                    onClick={() => window.location.href = '/citizen/schemes'}
-                    className="mt-4 text-gov-saffron font-bold hover:underline"
+                  <p className="font-medium text-slate-600">You haven't applied for any schemes yet.</p>
+                  <a 
+                    href="/citizen/schemes"
+                    className="inline-block mt-4 text-primary font-bold hover:underline"
                   >
                     Browse Available Schemes
-                  </button>
+                  </a>
                 </div>
               )}
             </div>

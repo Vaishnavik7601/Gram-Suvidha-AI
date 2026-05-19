@@ -148,6 +148,7 @@ router.put('/profile', protect, async (req, res) => {
     user.district = req.body.district !== undefined ? req.body.district : user.district;
     user.state = req.body.state !== undefined ? req.body.state : user.state;
     user.country = req.body.country !== undefined ? req.body.country : user.country;
+    user.pincode = req.body.pincode !== undefined ? req.body.pincode : user.pincode;
 
     await user.save();
 
@@ -167,9 +168,49 @@ router.put('/profile', protect, async (req, res) => {
         taluk: user.taluk,
         district: user.district,
         state: user.state,
-        country: user.country
+        country: user.country,
+        pincode: user.pincode
       }
     });
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error', error: error.message });
+  }
+});
+
+// @route   GET /api/auth/workers
+// @desc    Get all registered workers
+router.get('/workers', async (req, res) => {
+  try {
+    const workers = await User.find({ role: 'worker' }).select('-password');
+    res.json(workers);
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error', error: error.message });
+  }
+});
+
+// @route   POST /api/auth/workers
+// @desc    Register a new field worker
+router.post('/workers', async (req, res) => {
+  try {
+    const { name, email, phone, age, gender, village } = req.body;
+    
+    const workerExists = await User.findOne({ email });
+    if (workerExists) {
+      return res.status(400).json({ message: 'Worker already exists with this email' });
+    }
+
+    const worker = await User.create({
+      name,
+      email,
+      phone,
+      age,
+      gender,
+      village,
+      role: 'worker',
+      password: 'worker123'
+    });
+
+    res.status(201).json(worker);
   } catch (error) {
     res.status(500).json({ message: 'Server Error', error: error.message });
   }
