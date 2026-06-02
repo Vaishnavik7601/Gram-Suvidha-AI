@@ -50,34 +50,33 @@ const ComplaintsManagement = () => {
 
   const fetchComplaintsAndWorkers = async () => {
     try {
+      const token = localStorage.getItem('token');
+      const headers = { 'Authorization': `Bearer ${token}` };
       const [compRes, workRes] = await Promise.all([
-        fetch('/api/complaints'),
-        fetch('/api/auth/workers')
+        fetch('/api/complaints', { headers }),
+        fetch('/api/auth/workers', { headers })
       ]);
 
       if (compRes.ok) {
         const data = await compRes.json();
-        if (data && data.length > 0) {
-          const formatted = data.map((c, i) => {
-            const styles = getCategoryStyles(c.category);
-            return {
-              _id: c._id,
-              id: c._id ? `CMP-${c._id.slice(-4).toUpperCase()}` : `CMP-00${i + 1}`,
-              category: c.category ? c.category.replace('_', ' ').toUpperCase() : 'GENERAL',
-              title: c.description || 'No description provided',
-              status: c.status || 'Pending',
-              assigned: c.assigned || '-',
-              location: c.location || 'Unknown Location',
-              user: c.user,
-              ...styles
-            };
-          });
-          setComplaints(formatted);
-        } else {
-          setComplaints(mockComplaints);
-        }
+        const formatted = (data || []).map((c, i) => {
+          const styles = getCategoryStyles(c.category);
+          return {
+            _id: c._id,
+            id: c._id ? `CMP-${c._id.slice(-4).toUpperCase()}` : `CMP-00${i + 1}`,
+            category: c.category ? c.category.replace('_', ' ').toUpperCase() : 'GENERAL',
+            title: c.description || 'No description provided',
+            status: c.status || 'Pending',
+            assigned: c.assigned || '-',
+            location: c.location || 'Unknown Location',
+            user: c.user,
+            ...styles
+          };
+        });
+        setComplaints(formatted);
       } else {
-        setComplaints(mockComplaints);
+        console.error('Failed to fetch complaints');
+        setComplaints([]);
       }
 
       if (workRes.ok) {
@@ -85,8 +84,8 @@ const ComplaintsManagement = () => {
         setWorkers(workersData);
       }
     } catch (error) {
-      console.error("Error fetching data, using mock fallback:", error);
-      setComplaints(mockComplaints);
+      console.error('Error fetching data:', error);
+      setComplaints([]);
     } finally {
       setLoading(false);
     }
@@ -104,19 +103,18 @@ const ComplaintsManagement = () => {
 
   const handleUpdateComplaint = async () => {
     if (!selectedComplaint || !selectedComplaint._id) {
-      // Mock update fallback
-      const updated = complaints.map(c => 
-        c.id === selectedComplaint.id ? { ...c, status: modalStatus, assigned: modalAssigned } : c
-      );
-      setComplaints(updated);
       setSelectedComplaint(null);
       return;
     }
 
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/complaints/${selectedComplaint._id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ status: modalStatus, assigned: modalAssigned })
       });
 

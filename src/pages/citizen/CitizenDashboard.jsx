@@ -3,57 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import * as LucideIcons from 'lucide-react';
 
-const mockSubmissions = [
-  {
-    id: 'INC-001',
-    title: 'WATER SUPPLY',
-    desc: 'Major pipeline burst causing heavy water leakage on s...',
-    location: 'S V Road, Bandra West, Mumbai',
-    status: 'Under Review',
-    statusColor: 'text-yellow-600 bg-yellow-100',
-    stage: 'STAGE: REGISTRATION PHASE',
-    progress: 25,
-    date: '4/25/2026',
-    icon: <LucideIcons.Droplets className="text-blue-500" size={24} />
-  },
-  {
-    id: 'INC-002',
-    title: 'ROADS',
-    desc: 'Extremely deep pothole in the middle of the road...',
-    location: 'SV Road, Bandra West, Mumbai',
-    status: 'In Progress',
-    statusColor: 'text-blue-600 bg-blue-100',
-    stage: 'STAGE: IMPLEMENTATION PHASE',
-    progress: 75,
-    date: '4/24/2026',
-    icon: <LucideIcons.AlertTriangle className="text-orange-500" size={24} />
-  },
-  {
-    id: 'INC-003',
-    title: 'DRAINAGE',
-    desc: 'Open manhole near the school entrance. Very...',
-    location: 'Sanjay Gandhi National Park Rd',
-    status: 'Under Review',
-    statusColor: 'text-yellow-600 bg-yellow-100',
-    stage: 'STAGE: VERIFICATION',
-    progress: 50,
-    date: '4/23/2026',
-    icon: <LucideIcons.AlertTriangle className="text-purple-500" size={24} />
-  },
-  {
-    id: 'INC-004',
-    title: 'GARBAGE',
-    desc: 'Animal carcass on the road needs immediate...',
-    location: 'Chembur Naka, Mumbai',
-    status: 'Resolved',
-    statusColor: 'text-green-600 bg-green-100',
-    stage: 'STAGE: RESOLUTION REACHED',
-    progress: 100,
-    date: '4/22/2026',
-    icon: <LucideIcons.Trash2 className="text-stone-500" size={24} />
-  }
-];
-
 const getCategoryIcon = (category) => {
   const normalized = (category || '').toUpperCase();
   if (normalized.includes('WATER')) {
@@ -82,121 +31,136 @@ const getStatusStyles = (status) => {
 const CitizenDashboard = () => {
   const navigate = useNavigate();
   const [submissions, setSubmissions] = useState([]);
+  const [schemeApplications, setSchemeApplications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [userName, setUserName] = useState('John Doe');
+  const [userName, setUserName] = useState('Citizen');
+  const [village, setVillage] = useState('');
 
-  const [stats, setStats] = useState({
-    total: 6,
-    review: 3,
-    progress: 2,
-    resolved: 1
-  });
-
-  const [barData, setBarData] = useState([
-    { name: 'Water Supply', value: 1 },
-    { name: 'Roads', value: 1 },
-    { name: 'Drainage', value: 1 },
-    { name: 'Public Health', value: 1 },
-    { name: 'Encroachment', value: 1 },
-    { name: 'Garbage', value: 1 },
-  ]);
-
+  const [stats, setStats] = useState({ total: 0, review: 0, progress: 0, resolved: 0 });
+  const [barData, setBarData] = useState([]);
   const [pieData, setPieData] = useState([
-    { name: 'Under Review', value: 3, color: '#f59e0b' },
-    { name: 'In Progress', value: 2, color: '#3b82f6' },
-    { name: 'Resolved', value: 1, color: '#10b981' },
+    { name: 'Pending', value: 0, color: '#f59e0b' },
+    { name: 'In Progress', value: 0, color: '#3b82f6' },
+    { name: 'Resolved', value: 0, color: '#10b981' },
   ]);
 
   useEffect(() => {
-    // Get user details
+    const token = localStorage.getItem('token');
+
+    // Read user info from localStorage
     const userStr = localStorage.getItem('user');
-    let loggedInUserId = '';
     if (userStr) {
       try {
         const userObj = JSON.parse(userStr);
-        setUserName(userObj.name || 'John Doe');
-        loggedInUserId = userObj._id;
+        setUserName(userObj.name || 'Citizen');
+        setVillage(userObj.village || '');
       } catch (e) {
         console.error(e);
       }
     }
 
-    const fetchSubmissions = async () => {
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchDashboardData = async () => {
       try {
-        const response = await fetch('/api/complaints');
-        if (response.ok) {
-          const data = await response.json();
-          // Filter to show user's complaints if logged in, otherwise show all backend complaints up to 5
-          const filteredData = loggedInUserId 
-            ? data.filter(c => c.user && (c.user._id === loggedInUserId || c.user === loggedInUserId))
-            : data;
-          
-          if (filteredData && filteredData.length > 0) {
-            const formatted = filteredData.map((c, i) => {
-              const statusInfo = getStatusStyles(c.status);
-              return {
-                id: c._id ? `INC-${c._id.slice(-3).toUpperCase()}` : `INC-00${i + 1}`,
-                title: c.category ? c.category.replace('_', ' ').toUpperCase() : 'GENERAL',
-                desc: c.description ? c.description.slice(0, 50) + '...' : 'No description',
-                location: c.location || 'Unknown Location',
-                status: c.status,
-                date: c.createdAt ? new Date(c.createdAt).toLocaleDateString() : 'Recent',
-                icon: getCategoryIcon(c.category),
-                ...statusInfo
-              };
-            });
-            setSubmissions(formatted);
+        // Fetch this citizen's complaints (backend filters by req.user._id for citizens)
+        const [complaintsRes, profileRes] = await Promise.all([
+          fetch('/api/complaints', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }),
+          fetch('/api/auth/profile', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+        ]);
 
-            // Dynamically calculate stats
-            const total = formatted.length;
-            const review = formatted.filter(s => s.status === 'Pending' || s.status === 'Under Review' || s.status === 'Awaiting Review').length;
-            const progress = formatted.filter(s => s.status === 'In Progress').length;
-            const resolved = formatted.filter(s => s.status === 'Resolved').length;
-            setStats({ total, review, progress, resolved });
+        // ---- Complaints ----
+        if (complaintsRes.ok) {
+          const data = await complaintsRes.json();
+          const formatted = (data || []).map((c, i) => {
+            const statusInfo = getStatusStyles(c.status);
+            return {
+              _id: c._id,
+              id: c._id ? `INC-${c._id.slice(-3).toUpperCase()}` : `INC-00${i + 1}`,
+              title: c.category ? c.category.replace('_', ' ').toUpperCase() : 'GENERAL',
+              desc: c.description ? c.description.slice(0, 55) + (c.description.length > 55 ? '...' : '') : 'No description',
+              location: c.location || 'Unknown Location',
+              status: c.status || 'Pending',
+              date: c.createdAt ? new Date(c.createdAt).toLocaleDateString() : 'Recent',
+              icon: getCategoryIcon(c.category),
+              ...statusInfo
+            };
+          });
+          setSubmissions(formatted);
 
-            // Calculate category frequencies for bar chart
-            const categories = {};
-            formatted.forEach(s => {
-              categories[s.title] = (categories[s.title] || 0) + 1;
-            });
-            const newBarData = Object.keys(categories).map(cat => ({
-              name: cat,
-              value: categories[cat]
-            }));
-            if (newBarData.length > 0) setBarData(newBarData);
+          // Calculate stats from real data
+          const total = formatted.length;
+          const review = formatted.filter(s => s.status === 'Pending' || s.status === 'Under Review').length;
+          const progress = formatted.filter(s => s.status === 'In Progress').length;
+          const resolved = formatted.filter(s => s.status === 'Resolved').length;
+          setStats({ total, review, progress, resolved });
 
-            // Calculate resolution status pie chart
-            setPieData([
-              { name: 'Under Review', value: review, color: '#f59e0b' },
-              { name: 'In Progress', value: progress, color: '#3b82f6' },
-              { name: 'Resolved', value: resolved, color: '#10b981' },
-            ]);
+          // Category bar chart
+          const categories = {};
+          formatted.forEach(s => {
+            categories[s.title] = (categories[s.title] || 0) + 1;
+          });
+          const newBarData = Object.keys(categories).map(cat => ({ name: cat, value: categories[cat] }));
+          setBarData(newBarData);
 
-          } else {
-            setSubmissions(mockSubmissions);
+          // Pie chart
+          setPieData([
+            { name: 'Pending', value: review, color: '#f59e0b' },
+            { name: 'In Progress', value: progress, color: '#3b82f6' },
+            { name: 'Resolved', value: resolved, color: '#10b981' },
+          ]);
+        }
+
+        // ---- Scheme Applications ----
+        if (profileRes.ok) {
+          const profileData = await profileRes.json();
+          setSchemeApplications(profileData.applications || []);
+          // Also update name/village from fresh profile data
+          if (profileData.user) {
+            setUserName(profileData.user.name || 'Citizen');
+            setVillage(profileData.user.village || '');
           }
-        } else {
-          setSubmissions(mockSubmissions);
         }
       } catch (err) {
-        console.error("Error fetching user submissions, falling back to mock:", err);
-        setSubmissions(mockSubmissions);
+        console.error('Error fetching dashboard data:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSubmissions();
+    fetchDashboardData();
   }, []);
+
+  const schemeStatusColor = (status) => {
+    switch (status) {
+      case 'Approved': return 'bg-green-100 text-green-700';
+      case 'Rejected': return 'bg-red-100 text-red-700';
+      case 'Too Late': return 'bg-rose-100 text-rose-700';
+      case 'In Progress': return 'bg-blue-100 text-blue-700';
+      default: return 'bg-yellow-100 text-yellow-700';
+    }
+  };
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-800">Citizen Dashboard</h1>
-          <p className="text-slate-500 mt-1">Welcome back, <span className="font-bold text-slate-700">{userName}</span>. Track and manage your reported issues.</p>
+          <p className="text-slate-500 mt-1">
+            Welcome back, <span className="font-bold text-slate-700">{userName}</span>.
+            {village && <span className="text-slate-400"> • {village}</span>}
+            <span className="ml-2 text-xs">Track your reported issues and scheme applications.</span>
+          </p>
         </div>
-        <button 
+        <button
           onClick={() => navigate('/citizen/complaint')}
           className="bg-primary hover:bg-primary-dark text-white px-5 py-2.5 rounded-lg font-medium text-sm transition-colors flex items-center gap-2"
         >
@@ -228,11 +192,11 @@ const CitizenDashboard = () => {
         </div>
       </div>
 
-      {/* My Submissions */}
+      {/* My Complaints */}
       <div className="card">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h3 className="font-bold text-lg text-slate-800">My Submissions</h3>
+            <h3 className="font-bold text-lg text-slate-800">My Complaints</h3>
             <p className="text-xs text-slate-500">Track the live progress of your reported issues.</p>
           </div>
           <div className="text-xs font-bold px-3 py-1 border border-slate-200 rounded-full flex items-center gap-2">
@@ -242,7 +206,19 @@ const CitizenDashboard = () => {
 
         <div className="overflow-x-auto">
           {loading ? (
-            <div className="py-12 text-center text-slate-500">Loading submissions...</div>
+            <div className="py-12 text-center text-slate-500">Loading your complaints...</div>
+          ) : submissions.length === 0 ? (
+            <div className="py-16 text-center">
+              <LucideIcons.Inbox className="mx-auto mb-3 text-slate-300" size={48} />
+              <p className="font-semibold text-slate-500">No complaints filed yet</p>
+              <p className="text-xs text-slate-400 mt-1">Click "New Complaint" to report an issue in your village.</p>
+              <button
+                onClick={() => navigate('/citizen/complaint')}
+                className="mt-4 px-5 py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary-dark transition-colors"
+              >
+                File Your First Complaint
+              </button>
+            </div>
           ) : (
             <table className="w-full text-left">
               <thead>
@@ -256,7 +232,7 @@ const CitizenDashboard = () => {
               </thead>
               <tbody>
                 {submissions.map((sub, i) => (
-                  <tr key={i} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
+                  <tr key={sub._id || i} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
                     <td className="py-4 pl-4 flex gap-4 items-center">
                       <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0">
                         {sub.icon}
@@ -267,7 +243,7 @@ const CitizenDashboard = () => {
                       </div>
                     </td>
                     <td className="py-4">
-                      <span className={`text-xs font-bold px-2.5 py-1 rounded-md lowercase ${sub.statusColor}`}>
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${sub.statusColor}`}>
                         {sub.status}
                       </span>
                     </td>
@@ -282,9 +258,9 @@ const CitizenDashboard = () => {
                     <td className="py-4 w-48">
                       <div className="text-[10px] font-bold text-slate-400 uppercase mb-1.5">{sub.stage}</div>
                       <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                        <div 
-                          className={`h-full ${sub.progress === 100 ? 'bg-green-500' : 'bg-blue-500'}`} 
-                          style={{width: `${sub.progress}%`}}
+                        <div
+                          className={`h-full transition-all ${sub.progress === 100 ? 'bg-green-500' : 'bg-blue-500'}`}
+                          style={{ width: `${sub.progress}%` }}
                         ></div>
                       </div>
                     </td>
@@ -300,56 +276,123 @@ const CitizenDashboard = () => {
         </div>
       </div>
 
-      {/* Analytics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="card">
-          <h3 className="font-bold text-lg mb-1">Complaint Analytics</h3>
-          <p className="text-xs text-slate-500 mb-6">Visual overview of your reporting activity.</p>
-          
-          <div className="h-48 mt-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={barData} margin={{top: 10, right: 10, left: -20, bottom: 20}}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10}} angle={-45} textAnchor="end" />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10}} tickCount={5} />
-                <Bar dataKey="value" fill="#2563eb" radius={[2, 2, 0, 0]} barSize={30} />
-              </BarChart>
-            </ResponsiveContainer>
+      {/* My Scheme Applications */}
+      <div className="card">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h3 className="font-bold text-lg text-slate-800">My Scheme Applications</h3>
+            <p className="text-xs text-slate-500">Status of your government scheme applications.</p>
           </div>
-          <div className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Issues By Category</div>
+          <button
+            onClick={() => navigate('/citizen/schemes')}
+            className="text-xs font-bold px-3 py-1.5 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors flex items-center gap-1.5"
+          >
+            <LucideIcons.Plus size={13} /> Apply for Scheme
+          </button>
         </div>
 
-        <div className="card">
-          <h3 className="font-bold text-lg mb-6">&nbsp;</h3>
-          <div className="h-48 relative">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+        {loading ? (
+          <div className="py-8 text-center text-slate-500 text-sm">Loading applications...</div>
+        ) : schemeApplications.length === 0 ? (
+          <div className="py-10 text-center">
+            <LucideIcons.ClipboardList className="mx-auto mb-3 text-slate-300" size={40} />
+            <p className="font-semibold text-slate-500">No scheme applications yet</p>
+            <p className="text-xs text-slate-400 mt-1">Check eligibility and apply for government schemes.</p>
+            <button
+              onClick={() => navigate('/citizen/schemes')}
+              className="mt-4 px-5 py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary-dark transition-colors"
+            >
+              Explore Schemes
+            </button>
           </div>
-          <div className="flex justify-center gap-4 mt-6">
-            {pieData.map((item, i) => (
-              <div key={i} className="flex items-center gap-1.5 text-xs font-bold text-slate-500">
-                <span className="w-2 h-2 rounded-full" style={{backgroundColor: item.color}}></span>
-                {item.name}
-              </div>
-            ))}
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-200">
+                  <th className="pb-3 pl-4">Scheme Name</th>
+                  <th className="pb-3">Applicant</th>
+                  <th className="pb-3">Status</th>
+                  <th className="pb-3">Applied On</th>
+                  <th className="pb-3">Application ID</th>
+                </tr>
+              </thead>
+              <tbody className="text-sm">
+                {schemeApplications.map((app, i) => (
+                  <tr key={app._id || i} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
+                    <td className="py-3 pl-4 font-semibold text-slate-800">{app.schemeName}</td>
+                    <td className="py-3 text-slate-600">
+                      {app.applicantName}
+                      <div className="text-xs text-slate-400">{app.relationship || 'Self'} • {app.age} yrs</div>
+                    </td>
+                    <td className="py-3">
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${schemeStatusColor(app.status)}`}>
+                        {app.status}
+                      </span>
+                    </td>
+                    <td className="py-3 text-xs text-slate-500">
+                      {app.createdAt ? new Date(app.createdAt).toLocaleDateString() : '-'}
+                    </td>
+                    <td className="py-3 font-mono text-xs text-slate-500">{app.applicationId || '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          <div className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-4">Resolution Status</div>
-        </div>
+        )}
       </div>
+
+      {/* Analytics — only show if there's data */}
+      {submissions.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="card">
+            <h3 className="font-bold text-lg mb-1">Complaint Analytics</h3>
+            <p className="text-xs text-slate-500 mb-6">Visual overview of your reporting activity.</p>
+            <div className="h-48 mt-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={barData} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} angle={-30} textAnchor="end" />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} tickCount={5} allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="#2563eb" radius={[4, 4, 0, 0]} barSize={32} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Issues By Category</div>
+          </div>
+
+          <div className="card flex flex-col items-center justify-center">
+            <h3 className="font-bold text-lg mb-4 self-start">Resolution Status</h3>
+            <div className="h-48 w-full relative">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData.filter(d => d.value > 0)}
+                    innerRadius={55}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {pieData.filter(d => d.value > 0).map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex justify-center gap-4 mt-4">
+              {pieData.filter(d => d.value > 0).map((item, i) => (
+                <div key={i} className="flex items-center gap-1.5 text-xs font-bold text-slate-500">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }}></span>
+                  {item.name} ({item.value})
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

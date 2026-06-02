@@ -27,6 +27,11 @@ const userSchema = new mongoose.Schema({
     enum: ['citizen', 'admin', 'worker'],
     default: 'citizen',
   },
+  status: {
+    type: String,
+    enum: ['active', 'on_leave', 'resigned'],
+    default: 'active',
+  },
   profilePhoto: {
     type: String,
   },

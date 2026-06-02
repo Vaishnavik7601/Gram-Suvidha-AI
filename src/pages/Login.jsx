@@ -22,17 +22,28 @@ const Login = () => {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: identifier, password }), // Assuming email is used as identifier
+        body: JSON.stringify({ email: identifier, password, role }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
+        if (data.role !== role) {
+          setError('Invalid email or password for selected role');
+          return;
+        }
+
         localStorage.setItem('token', data.token);
         localStorage.setItem('role', data.role);
-        localStorage.setItem('user', JSON.stringify({ name: data.name, email: data.email, _id: data._id }));
-        
-        if (data.role === 'admin' || role === 'admin') {
+        localStorage.setItem('user', JSON.stringify({
+          name: data.name,
+          email: data.email,
+          _id: data._id,
+          villageId: data.villageId || '',
+          village: data.village || ''
+        }));
+
+        if (data.role === 'admin') {
           navigate('/admin/dashboard');
         } else {
           navigate('/');
@@ -48,8 +59,18 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
+    <div className="min-h-screen relative font-sans flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      {/* Formal Government-style background with gradient overlay */}
+      <div 
+        className="fixed inset-0 z-0 bg-cover bg-center bg-fixed"
+        style={{
+          backgroundImage: "url('/village-bg.png')",
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-50/75 via-white/80 to-blue-50/75 backdrop-blur-[2px]" />
+      </div>
+
+      <div className="relative z-10 sm:mx-auto sm:w-full sm:max-w-md text-center">
         <div className="flex justify-center items-center gap-2 text-3xl font-extrabold text-slate-900 mb-2">
           <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
             <Activity className="text-primary" />
@@ -59,8 +80,8 @@ const Login = () => {
         <p className="text-sm text-slate-600">{t('loginTitle')}</p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow-lg rounded-xl border border-slate-200 sm:px-10">
+      <div className="relative z-10 mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white/90 backdrop-blur-md py-8 px-4 shadow-2xl rounded-2xl border border-white/50 sm:px-10">
           <div className="flex justify-center mb-6 space-x-2 border-b border-slate-200 pb-4">
             <button
               type="button"

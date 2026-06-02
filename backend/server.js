@@ -61,6 +61,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/complaints', require('./routes/complaints'));
 app.use('/api/schemes', require('./routes/schemes'));
 app.use('/api/reports', require('./routes/reports'));
+app.use('/api/chat', require('./routes/chat'));
 
 // Basic route for testing
 app.get('/', (req, res) => {

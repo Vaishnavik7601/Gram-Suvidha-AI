@@ -1,15 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Activity, ArrowRight, ShieldCheck, MapPin, Users, Droplets, Lightbulb, Trash2, FileSpreadsheet } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import SCHEMES_DB from '../data/schemes';
 
 const LandingPage = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
   const role = localStorage.getItem('role');
 
   const isCitizen = token && role === 'citizen';
+
+  const [selectedScheme, setSelectedScheme] = useState(null);
 
   const handleDashboardRedirect = () => {
     if (isCitizen) {
@@ -29,17 +32,15 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-screen relative text-slate-900 font-sans overflow-x-hidden">
-      {/* Blurred full page background */}
+      {/* Formal Government-style background with gradient overlay */}
       <div 
-        className="fixed inset-0 z-0 bg-cover bg-center"
+        className="fixed inset-0 z-0 bg-cover bg-center bg-fixed"
         style={{
-          backgroundImage: "url('/village-bg.jpg')",
-          filter: 'blur(3px) brightness(0.95)',
-          transform: 'scale(1.02)'
+          backgroundImage: "url('/village-bg.png')",
         }}
-      />
-      {/* Semi-transparent white overlay to ensure readability */}
-      <div className="fixed inset-0 z-0 bg-white/75 backdrop-blur-[1px]" />
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-50/75 via-white/80 to-blue-50/75 backdrop-blur-[2px]" />
+      </div>
 
       <div className="relative z-10 min-h-screen flex flex-col justify-between">
         {/* Header */}
@@ -121,40 +122,98 @@ const LandingPage = () => {
           <p className="text-slate-500 max-w-lg mx-auto mb-16 text-sm">{t('categoriesDesc')}</p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow text-left">
-              <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600 mb-6">
-                <Droplets size={24} />
+            <div className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl border border-slate-200 shadow-sm hover:shadow-2xl hover:-translate-y-2 hover:border-blue-300 transition-all duration-300 text-left group cursor-pointer">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100/50 flex items-center justify-center text-blue-600 mb-6 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
+                <Droplets size={28} />
               </div>
-              <h3 className="font-bold text-lg text-slate-900 mb-2">{t('waterTitle')}</h3>
+              <h3 className="font-bold text-lg text-slate-900 mb-3 group-hover:text-blue-600 transition-colors">{t('waterTitle')}</h3>
               <p className="text-slate-600 text-sm leading-relaxed">{t('waterDesc')}</p>
             </div>
 
-            <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow text-left">
-              <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600 mb-6">
-                <Lightbulb size={24} />
+            <div className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl border border-slate-200 shadow-sm hover:shadow-2xl hover:-translate-y-2 hover:border-amber-300 transition-all duration-300 text-left group cursor-pointer">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100/50 flex items-center justify-center text-amber-600 mb-6 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-300">
+                <Lightbulb size={28} />
               </div>
-              <h3 className="font-bold text-lg text-slate-900 mb-2">{t('lightTitle')}</h3>
+              <h3 className="font-bold text-lg text-slate-900 mb-3 group-hover:text-amber-600 transition-colors">{t('lightTitle')}</h3>
               <p className="text-slate-600 text-sm leading-relaxed">{t('lightDesc')}</p>
             </div>
 
-            <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow text-left">
-              <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 mb-6">
-                <Trash2 size={24} />
+            <div className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl border border-slate-200 shadow-sm hover:shadow-2xl hover:-translate-y-2 hover:border-emerald-300 transition-all duration-300 text-left group cursor-pointer">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100/50 flex items-center justify-center text-emerald-600 mb-6 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
+                <Trash2 size={28} />
               </div>
-              <h3 className="font-bold text-lg text-slate-900 mb-2">{t('roadTitle')}</h3>
+              <h3 className="font-bold text-lg text-slate-900 mb-3 group-hover:text-emerald-600 transition-colors">{t('roadTitle')}</h3>
               <p className="text-slate-600 text-sm leading-relaxed">{t('roadDesc')}</p>
             </div>
 
-            <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow text-left">
-              <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-600 mb-6">
-                <FileSpreadsheet size={24} />
+            <div className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl border border-slate-200 shadow-sm hover:shadow-2xl hover:-translate-y-2 hover:border-indigo-300 transition-all duration-300 text-left group cursor-pointer">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-50 to-indigo-100/50 flex items-center justify-center text-indigo-600 mb-6 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-300">
+                <FileSpreadsheet size={28} />
               </div>
-              <h3 className="font-bold text-lg text-slate-900 mb-2">{t('schemeTitle')}</h3>
+              <h3 className="font-bold text-lg text-slate-900 mb-3 group-hover:text-indigo-600 transition-colors">{t('schemeTitle')}</h3>
               <p className="text-slate-600 text-sm leading-relaxed">{t('schemeDesc')}</p>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Popular Schemes Preview */}
+      <div className="py-12 bg-transparent">
+        <div className="container mx-auto px-6 text-center">
+          <h2 className="text-2xl font-bold text-slate-900 mb-4">Popular Welfare Schemes</h2>
+          <p className="text-slate-500 mb-6 text-sm">Key schemes with brief descriptions — click to learn more and apply.</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {SCHEMES_DB.map(s => {
+              const txt = s.translations?.[language] || s.translations?.en;
+              return (
+                <div key={s.id} onClick={() => setSelectedScheme(s)} className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-2xl hover:-translate-y-2 hover:border-primary/50 transition-all duration-300 text-left cursor-pointer group">
+                  <h3 className="font-bold text-lg text-slate-900 mb-2 group-hover:text-primary transition-colors">{txt.name}</h3>
+                  <p className="text-slate-600 text-sm leading-relaxed mb-4">{txt.full.length > 140 ? txt.full.slice(0,140) + '...' : txt.full}</p>
+                  <div className="flex items-center justify-between mt-auto">
+                    <div className="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">Age {s.minAge}-{s.maxAge}</div>
+                    <button className="text-primary font-bold text-sm flex items-center gap-1 group-hover:translate-x-1 transition-transform">Learn more <ArrowRight size={14}/></button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Scheme Details Modal (inline) */}
+      {selectedScheme && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full p-6 relative max-h-[90vh] overflow-y-auto">
+            <button onClick={() => setSelectedScheme(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-2xl font-semibold">×</button>
+            {(() => {
+              const txt = selectedScheme.translations?.[language] || selectedScheme.translations?.en || {};
+              return (
+                <>
+                  <h2 className="text-2xl font-bold text-slate-800 mb-2">{txt.name}</h2>
+                  <div className="text-sm text-slate-600 mb-4">Eligibility: Age {selectedScheme.minAge} - {selectedScheme.maxAge} • Income limit: ₹{(selectedScheme.maxIncome || 0).toLocaleString()}</div>
+                  <div className="bg-blue-50/50 border border-blue-100 p-4 rounded-xl mb-6">
+                    <h4 className="font-semibold text-slate-800 mb-1 text-sm">Scheme Details</h4>
+                    <p className="text-slate-600 text-sm leading-relaxed">
+                      {txt.full}
+                    </p>
+                  </div>
+                </>
+              );
+            })()}
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setSelectedScheme(null)} className="px-4 py-2 rounded-lg border border-slate-200 text-sm">Close</button>
+              <button onClick={() => {
+                if (token && role === 'citizen') {
+                  navigate('/citizen/schemes');
+                } else {
+                  navigate('/login');
+                }
+              }} className="px-4 py-2 rounded-lg bg-primary text-white text-sm">Open Schemes Page</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="bg-white/40 backdrop-blur-sm border-t border-slate-200/50 py-12 text-center text-slate-400 text-xs font-semibold tracking-wider">

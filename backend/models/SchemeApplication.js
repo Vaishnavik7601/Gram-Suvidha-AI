@@ -1,6 +1,9 @@
 const mongoose = require('mongoose');
 
 const schemeApplicationSchema = new mongoose.Schema({
+  applicationId: {
+    type: String,
+  },
   schemeName: {
     type: String,
     required: true,
@@ -23,7 +26,7 @@ const schemeApplicationSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Pending', 'Application Submitted', 'Approved', 'Rejected'],
+    enum: ['Pending', 'Application Submitted', 'Approved', 'Rejected', 'Too Late', 'In Progress'],
     default: 'Pending',
   },
   relationship: {
@@ -40,6 +43,10 @@ const schemeApplicationSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
+  },
+  villageId: {
+    type: String,
+    default: '',
   },
 }, { timestamps: true });
 

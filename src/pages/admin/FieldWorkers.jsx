@@ -15,13 +15,16 @@ const FieldWorkers = () => {
 
   const fetchWorkers = async () => {
     try {
-      const response = await fetch('/api/auth/workers');
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/auth/workers', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       if (response.ok) {
         const data = await response.json();
         setWorkers(data);
       }
     } catch (err) {
-      console.error("Error fetching workers:", err);
+      console.error('Error fetching workers:', err);
     } finally {
       setLoading(false);
     }
@@ -40,16 +43,19 @@ const FieldWorkers = () => {
       return;
     }
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch('/api/auth/workers', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           name,
           email: name.toLowerCase().replace(/\s+/g, '') + '@panchayat.gov.in',
           phone,
           age: Number(age),
           gender,
-          village
         })
       });
       if (response.ok) {
@@ -147,9 +153,37 @@ const FieldWorkers = () => {
                           {worker.age} Y/O • {worker.gender ? worker.gender.toUpperCase() : 'MALE'}
                         </td>
                         <td className="py-4 text-center">
-                          <span className="text-xs font-bold text-green-600 uppercase tracking-wider bg-green-50 px-2 py-1 rounded">
-                            ACTIVE
-                          </span>
+                          <select
+                            value={worker.status || 'active'}
+                            onChange={async (e) => {
+                              const newStatus = e.target.value;
+                              try {
+                                const token = localStorage.getItem('token');
+                                const res = await fetch(`/api/auth/workers/${worker._id}`, {
+                                  method: 'PUT',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${token}`
+                                  },
+                                  body: JSON.stringify({ status: newStatus })
+                                });
+                                if (res.ok) {
+                                  // optimistic update
+                                  setWorkers(prev => prev.map(w => w._id === worker._id ? { ...w, status: newStatus } : w));
+                                } else {
+                                  const err = await res.json();
+                                  alert(err.message || 'Failed to update status');
+                                }
+                              } catch (err) {
+                                alert('Network error');
+                              }
+                            }}
+                            className="text-sm rounded border border-slate-200 px-2 py-1 bg-white"
+                          >
+                            <option value="active">Active</option>
+                            <option value="on_leave">On Leave</option>
+                            <option value="resigned">Resigned</option>
+                          </select>
                         </td>
                       </tr>
                     ));
@@ -222,16 +256,8 @@ const FieldWorkers = () => {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Assigned Village / Ward</label>
-                <input
-                  type="text"
-                  required
-                  value={village}
-                  onChange={(e) => setVillage(e.target.value)}
-                  placeholder="e.g. Rampur Panchayat"
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-white"
-                />
+              <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-xs text-blue-700">
+                <span className="font-bold">ℹ Village:</span> Worker will be automatically assigned to your village.
               </div>
             </div>
 

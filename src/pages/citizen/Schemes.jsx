@@ -1,15 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Lightbulb, Search, Filter, ShieldCheck, IndianRupee } from 'lucide-react';
-
-const SCHEMES_DB = [
-  { id: 1, name: 'Pradhan Mantri Awas Yojana (PMAY)', desc: 'Housing for the rural poor.', minAge: 18, maxAge: 100, maxIncome: 300000, fullDetails: 'Provides pucca houses with basic amenities to all houseless households and those living in kutcha and dilapidated houses.' },
-  { id: 2, name: 'MGNREGA', desc: 'Guarantees 100 days of wage employment.', minAge: 18, maxAge: 65, maxIncome: 500000, fullDetails: 'Mahatma Gandhi National Rural Employment Guarantee Act enhances livelihood security in rural areas by providing at least 100 days of guaranteed wage employment.' },
-  { id: 3, name: 'PM Kisan Samman Nidhi', desc: 'Income support to all landholding farmer families.', minAge: 18, maxAge: 100, maxIncome: 600000, fullDetails: 'Provides income support of ₹6,000 per year in three equal installments to all land holding farmer families.' },
-  { id: 4, name: 'National Social Assistance Programme', desc: 'Pension scheme for elderly citizens.', minAge: 60, maxAge: 120, maxIncome: 200000, fullDetails: 'A welfare program being administered by the Ministry of Rural Development. It provides financial assistance to the elderly, widows and persons with disabilities.' },
-  { id: 5, name: 'Sukanya Samriddhi Yojana', desc: 'Savings scheme targeted at parents of girl children.', minAge: 0, maxAge: 10, maxIncome: 1000000, fullDetails: 'A small deposit scheme for the girl child launched as a part of the Beti Bachao Beti Padhao campaign.' },
-  { id: 6, name: 'Jal Jeevan Mission', desc: 'Safe and adequate drinking water through individual household tap connections.', minAge: 18, maxAge: 100, maxIncome: 10000000, fullDetails: 'Har Ghar Jal aims to provide tap water to every rural household.' },
-  { id: 7, name: 'Deen Dayal Upadhyaya Grameen Kaushalya Yojana', desc: 'Placement linked skill development program for rural youth.', minAge: 15, maxAge: 35, maxIncome: 400000, fullDetails: 'Transforms rural poor youth into an economically independent and globally relevant workforce.' },
-];
+import SCHEMES_DB from '../../data/schemes';
+import { useLanguage } from '../../context/LanguageContext';
 
 const Schemes = () => {
   const [age, setAge] = useState('');
@@ -27,6 +19,7 @@ const Schemes = () => {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [relationship, setRelationship] = useState('Self');
   const [myApplications, setMyApplications] = useState([]);
+  const [applyError, setApplyError] = useState('');
 
   useEffect(() => {
     const fetchProfileAndApps = async () => {
@@ -49,6 +42,8 @@ const Schemes = () => {
     };
     fetchProfileAndApps();
   }, []);
+
+  const { language } = useLanguage();
 
   const filteredSchemes = useMemo(() => {
     if (!hasSearched) return [];
@@ -76,9 +71,11 @@ const Schemes = () => {
     if (!applicantName || !idProof) return;
 
     setIsSubmitting(true);
+    setApplyError('');
     
+    const schemeTxtForSubmit = selectedScheme.translations?.[language] || selectedScheme.translations?.en || {};
     const formData = new FormData();
-    formData.append('schemeName', selectedScheme.name);
+    formData.append('schemeName', schemeTxtForSubmit.name || selectedScheme.key);
     formData.append('applicantName', applicantName);
     formData.append('idNumber', idNumber);
     formData.append('age', age);
@@ -105,14 +102,15 @@ const Schemes = () => {
           setApplicantName('');
           setIdNumber('');
           setIdProof(null);
+          setApplyError('');
         }, 2500);
       } else {
         const errData = await response.json();
-        alert("Failed to submit application: " + errData.message);
+        setApplyError(errData.message || 'Failed to submit application.');
       }
     } catch (error) {
       console.error(error);
-      alert("Error submitting application. Is the backend running?");
+      setApplyError('Network error submitting application. Is the backend running?');
     } finally {
       setIsSubmitting(false);
     }
@@ -214,18 +212,22 @@ const Schemes = () => {
           
           {filteredSchemes.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredSchemes.map((scheme) => (
-                <div key={scheme.id} className="border border-blue-100 bg-blue-50/20 rounded-xl p-5 hover:shadow-md transition-shadow relative overflow-hidden group cursor-pointer" onClick={() => {setSelectedScheme(scheme); setSubmitSuccess(false);}}>
-                  <div className="absolute top-0 right-0 p-3 text-primary opacity-10 group-hover:opacity-100 transition-opacity">
-                    <ShieldCheck size={48} />
+              {filteredSchemes.map((scheme) => {
+                const txt = scheme.translations?.[language] || scheme.translations?.en;
+                return (
+                  <div key={scheme.id} className="border border-blue-100 bg-blue-50/20 rounded-xl p-5 hover:shadow-md transition-shadow relative overflow-hidden group cursor-pointer" onClick={() => {setSelectedScheme(scheme); setSubmitSuccess(false);}}>
+                    
+                    <div className="absolute top-0 right-0 p-3 text-primary opacity-10 group-hover:opacity-100 transition-opacity">
+                      <ShieldCheck size={48} />
+                    </div>
+                    <h3 className="font-bold text-lg text-slate-800 mb-2 pr-12">{txt.name}</h3>
+                    <p className="text-slate-600 text-sm mb-4 leading-relaxed">{txt.short}</p>
+                    <div className="mt-auto flex items-center gap-2 text-xs font-semibold text-primary bg-primary/10 w-max px-3 py-1 rounded-full">
+                      <ShieldCheck size={14} /> Highly Eligible
+                    </div>
                   </div>
-                  <h3 className="font-bold text-lg text-slate-800 mb-2 pr-12">{scheme.name}</h3>
-                  <p className="text-slate-600 text-sm mb-4 leading-relaxed">{scheme.desc}</p>
-                  <div className="mt-auto flex items-center gap-2 text-xs font-semibold text-primary bg-primary/10 w-max px-3 py-1 rounded-full">
-                    <ShieldCheck size={14} /> Highly Eligible
-                  </div>
-                </div>
-              ))}
+                );
+                })}
             </div>
           ) : (
             <div className="text-center py-12 bg-slate-50 rounded-xl border border-slate-200">
@@ -245,7 +247,10 @@ const Schemes = () => {
             
             {!submitSuccess ? (
               <>
-                <h2 className="text-2xl font-bold text-slate-800 mb-2 pr-6">{selectedScheme.name}</h2>
+                {(() => {
+                  const txt = selectedScheme.translations?.[language] || selectedScheme.translations?.en || {};
+                  return <h2 className="text-2xl font-bold text-slate-800 mb-2 pr-6">{txt.name}</h2>;
+                })()}
                 <div className="flex items-center gap-2 text-xs font-semibold text-primary bg-primary/10 w-max px-3 py-1 rounded-full mb-4">
                    <ShieldCheck size={14} /> You are Eligible
                 </div>
@@ -253,7 +258,10 @@ const Schemes = () => {
                 <div className="bg-blue-50/50 border border-blue-100 p-4 rounded-xl mb-6">
                   <h4 className="font-semibold text-slate-800 mb-1 text-sm">Scheme Details</h4>
                   <p className="text-slate-600 text-sm leading-relaxed">
-                    {selectedScheme.fullDetails}
+                    {(() => {
+                      const txt = selectedScheme.translations?.[language] || selectedScheme.translations?.en || {};
+                      return txt.full;
+                    })()}
                   </p>
                 </div>
 
@@ -261,8 +269,9 @@ const Schemes = () => {
                   <h3 className="font-bold text-lg text-slate-800 mb-4">Application Form</h3>
                   
                   {(() => {
+                    const schemeTxt = selectedScheme.translations?.[language] || selectedScheme.translations?.en || {};
                     const isAlreadyRegistered = selectedScheme && myApplications.some(app => 
-                      app.schemeName === selectedScheme.name && 
+                      app.schemeName === (schemeTxt.name || selectedScheme.key) && 
                       (app.relationship || 'Self') === relationship
                     );
 
@@ -326,6 +335,7 @@ const Schemes = () => {
                             value={idNumber}
                             onChange={e => setIdNumber(e.target.value.toUpperCase())}
                           />
+                          <p className="text-[10px] text-slate-400 mt-1">Enter a valid 12-digit Aadhaar number or a 10-character PAN number (e.g., ABCDE1234F)</p>
                         </div>
                         <div>
                           <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Upload ID Proof (Scan/Photo)</label>
@@ -338,6 +348,13 @@ const Schemes = () => {
                           />
                         </div>
                         
+                        {applyError && (
+                          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-xs font-semibold flex items-start gap-2">
+                            <span className="mt-0.5">⚠</span>
+                            <span>{applyError}</span>
+                          </div>
+                        )}
+
                         <button type="submit" disabled={isSubmitting || isAlreadyRegistered} className="w-full py-3 bg-primary text-white rounded-lg font-bold hover:bg-primary-dark transition-colors flex justify-center items-center gap-2 disabled:opacity-50">
                           {isSubmitting ? 'Submitting...' : 'Submit Application'}
                         </button>
@@ -352,7 +369,10 @@ const Schemes = () => {
                   <ShieldCheck size={32} />
                 </div>
                 <h3 className="text-xl font-bold text-slate-800 mb-2">Application Submitted!</h3>
-                <p className="text-slate-600 text-sm">Your application for {selectedScheme.name} has been successfully submitted and is under review.</p>
+                <p className="text-slate-600 text-sm">{(() => {
+                  const txt = selectedScheme.translations?.[language] || selectedScheme.translations?.en || {};
+                  return `Your application for ${txt.name || selectedScheme.key} has been successfully submitted and is under review.`;
+                })()}</p>
               </div>
             )}
           </div>

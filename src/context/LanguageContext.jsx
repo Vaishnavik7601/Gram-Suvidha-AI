@@ -157,13 +157,48 @@ const translations = {
     schemeTitle: "कल्याणकारी योजनाएं",
     schemeDesc: "आवास, कृषि और पेयजल योजनाओं के लिए आवेदन करें"
   }
+  ,
+  extra: {
+    en: {
+      popularSchemesTitle: 'Popular Welfare Schemes',
+      popularSchemesDesc: 'Key schemes with brief descriptions — click to learn more and apply.',
+      learnMore: 'Learn more →',
+      schemeDetailsLabel: 'Scheme Details',
+      eligibilityLabel: 'Eligibility',
+      openSchemesPage: 'Open Schemes Page',
+      close: 'Close',
+      schemesCheckerTitle: 'Schemes Eligibility Checker',
+      schemesCheckerDesc: 'Enter your demographic details below. The GramSuvidha engine will recommend government schemes tailored for you.',
+      checkEligibilityBtn: 'Check Eligibility',
+      noMatchingSchemesMsg: 'No matching schemes found for the entered criteria.',
+      tryAdjustMsg: 'Try adjusting the income or age parameters.'
+    },
+    hi: {
+      popularSchemesTitle: 'लोकप्रिय कल्याणकारी योजनाएं',
+      popularSchemesDesc: 'संक्षिप्त विवरण के साथ प्रमुख योजनाएँ — अधिक जानने और आवेदन करने के लिए क्लिक करें।',
+      learnMore: 'और पढ़ें →',
+      schemeDetailsLabel: 'योजना विवरण',
+      eligibilityLabel: 'पात्रता',
+      openSchemesPage: 'योजनाएँ खोलें',
+      close: 'बंद करें',
+      schemesCheckerTitle: 'योजना पात्रता चेकर',
+      schemesCheckerDesc: 'अपनी जनसांख्यिकीय जानकारी नीचे दर्ज करें। GramSuvidha इंजन आपके लिए उपयुक्त सरकारी योजनाएँ सुझाएगा।',
+      checkEligibilityBtn: 'पात्रता जाँचें',
+      noMatchingSchemesMsg: 'दिए गए मानदंडों के लिए कोई मिलती-जुलती योजना नहीं मिली।',
+      tryAdjustMsg: 'कृपया आय या आयु पैरामीटर समायोजित करके पुनः प्रयास करें।'
+    }
+  }
 };
 
 export const LanguageProvider = ({ children }) => {
   const [language, setLanguage] = useState('en');
 
   const t = (key) => {
-    return translations[language][key] || key;
+    return (
+      (translations[language] && translations[language][key]) ||
+      (translations.extra && translations.extra[language] && translations.extra[language][key]) ||
+      key
+    );
   };
 
   const toggleLanguage = () => {

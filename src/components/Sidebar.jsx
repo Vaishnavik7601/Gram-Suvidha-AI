@@ -1,17 +1,21 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, FileText, Settings, ShieldAlert, Activity, Menu, X, PlusCircle, Clock, MapPin, Briefcase, Home } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, ShieldAlert, Activity, Menu, X, PlusCircle, Clock, MapPin, Briefcase, Home } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 const Sidebar = ({ role, isOpen, setIsOpen }) => {
   const { t } = useLanguage();
   const location = useLocation();
+  const storedUser = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user') || '{}') : {};
+  const displayName = storedUser.name || (role === 'admin' ? t('sysAdmin') : t('citizen'));
+  const displaySub = storedUser.village || storedUser.villageId || (role === 'admin' ? t('sysAdmin') : t('citizen'));
 
   const adminLinks = [
     { name: t('home'), path: '/', icon: <Home size={20} /> },
     { name: t('systemOverview'), path: '/admin/dashboard', icon: <LayoutDashboard size={20} /> },
     { name: t('fieldWorkers'), path: '/admin/workers', icon: <Users size={20} /> },
     { name: t('complaintsMgmt'), path: '/admin/complaints', icon: <FileText size={20} /> },
+    { name: 'Scheme Applicants', path: '/admin/schemes', icon: <Briefcase size={20} /> },
   ];
 
   const citizenLinks = [
@@ -69,17 +73,13 @@ const Sidebar = ({ role, isOpen, setIsOpen }) => {
         </div>
 
         <div className="p-4 border-t border-slate-200">
-          <div className="flex items-center gap-3 px-4 py-3 text-slate-600 rounded-xl hover:bg-slate-50 cursor-pointer">
-            <Settings size={20} />
-            <span className="font-medium">{t('settings')}</span>
-          </div>
           <div className="mt-4 flex items-center gap-3 px-4">
             <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600">
-              {role === 'admin' ? 'AD' : 'CT'}
+              {displayName ? displayName.charAt(0).toUpperCase() : role === 'admin' ? 'A' : 'C'}
             </div>
             <div>
-              <p className="text-sm font-bold text-slate-800">{role === 'admin' ? t('sysAdmin') : t('citizen')}</p>
-              <p className="text-xs text-slate-500 capitalize">{role === 'admin' ? t('sysAdmin') : t('citizen')}</p>
+              <p className="text-sm font-bold text-slate-800">{displayName}</p>
+              <p className="text-xs text-slate-500 capitalize">{displaySub}</p>
             </div>
           </div>
         </div>

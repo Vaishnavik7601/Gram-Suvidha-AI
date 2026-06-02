@@ -14,6 +14,7 @@ const SignUp = () => {
     confirmPassword: '',
     role: 'citizen',
     gender: '',
+    village: '',
     villageId: '',
   });
   const [error, setError] = useState('');
@@ -68,6 +69,7 @@ const SignUp = () => {
           age: Number(formData.age),
           role: formData.role,
           gender: formData.gender,
+          village: formData.village,
           villageId: formData.villageId,
         }),
       });
@@ -76,7 +78,13 @@ const SignUp = () => {
       if (response.ok) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('role', data.role);
-        localStorage.setItem('user', JSON.stringify({ name: data.name, email: data.email, _id: data._id }));
+        localStorage.setItem('user', JSON.stringify({
+          name: data.name,
+          email: data.email,
+          _id: data._id,
+          villageId: data.villageId || '',
+          village: data.village || ''
+        }));
         
         if (data.role === 'admin') {
           navigate('/admin/dashboard');
@@ -94,8 +102,18 @@ const SignUp = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
+    <div className="min-h-screen relative font-sans flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      {/* Formal Government-style background with gradient overlay */}
+      <div 
+        className="fixed inset-0 z-0 bg-cover bg-center bg-fixed"
+        style={{
+          backgroundImage: "url('/village-bg.png')",
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-50/75 via-white/80 to-blue-50/75 backdrop-blur-[2px]" />
+      </div>
+
+      <div className="relative z-10 sm:mx-auto sm:w-full sm:max-w-md text-center">
         <div className="flex justify-center items-center gap-2 text-3xl font-extrabold text-slate-900 mb-2">
           <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
             <Activity className="text-primary" />
@@ -105,8 +123,8 @@ const SignUp = () => {
         <p className="text-sm text-slate-600">Register a new citizen or admin account</p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow-lg rounded-xl border border-slate-200 sm:px-10">
+      <div className="relative z-10 mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white/90 backdrop-blur-md py-8 px-4 shadow-2xl rounded-2xl border border-white/50 sm:px-10">
           {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm font-semibold">{error}</div>}
 
           <form onSubmit={handleSignUp} className="space-y-4">
@@ -195,6 +213,35 @@ const SignUp = () => {
                 />
               </div>
             </div>
+            {formData.role === 'citizen' && (
+              <>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Village Name</label>
+                  <input
+                    type="text"
+                    name="village"
+                    required
+                    className="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-white"
+                    placeholder="Your village name"
+                    onChange={handleChange}
+                    value={formData.village}
+                  />
+                </div>
+                <div className="bg-blue-50 border border-blue-100 p-3 rounded-xl">
+                  <label className="block text-xs font-bold text-blue-700 uppercase tracking-wider mb-2">Village / Panchayat ID</label>
+                  <input
+                    type="text"
+                    name="villageId"
+                    required
+                    className="w-full border border-blue-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white"
+                    placeholder="e.g. VIL-10293 (get from your Panchayat admin)"
+                    onChange={handleChange}
+                    value={formData.villageId}
+                  />
+                  <p className="text-[10px] text-blue-600 font-medium mt-2">⚠ You must enter the same Village ID your Panchayat Admin used during registration. This links you to the correct admin.</p>
+                </div>
+              </>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>

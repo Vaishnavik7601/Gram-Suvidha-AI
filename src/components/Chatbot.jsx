@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, Bot, User, Sparkles } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -43,35 +44,38 @@ const Chatbot = () => {
     setMessages((prev) => [...prev, userMsg]);
     setInputText('');
     setIsTyping(true);
-
-    // Simulate AI response delay
-    setTimeout(() => {
-      let botResponse = '';
-      const query = text.toLowerCase();
-
-      if (query.includes('complaint') || query.includes('file') || query.includes('report')) {
-        botResponse = 'To file a complaint: \n1. Log in or Register a citizen account.\n2. Click "Report a Complaint" in the menu or sidebar.\n3. Fill in the title, description, category, and pin location.\n4. Upload a photo of the issue for verification.\nOur Panchayat admins will verify it and assign a field worker within 24 hours.';
-      } else if (query.includes('scheme') || query.includes('yojana') || query.includes('apply')) {
-        botResponse = 'You can browse active rural development schemes under the "Schemes" section. We support various programs including Jal Jeevan Mission, Pradhan Mantri Awas Yojana, and local infrastructure projects. You can apply directly through the schemes dashboard.';
-      } else if (query.includes('track') || query.includes('status') || query.includes('progress')) {
-        botResponse = 'Once you file a complaint, it is updated dynamically. Go to your dashboard to view its status:\n- Pending: Under review by Panchayat admin\n- Assigned: Field agent is dispatched\n- Resolved: Issue rectified with completion proof uploaded.';
-      } else if (query.includes('hello') || query.includes('hi') || query.includes('hey') || query.includes('namaste')) {
-        botResponse = 'Hello! I can guide you on registering complaints, checking scheme eligibility, and tracking civic issues. What would you like to know?';
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const botResponse = data.reply || 'Sorry, I could not process that right now.';
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now() + 1,
+            sender: 'bot',
+            text: botResponse,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          },
+        ]);
       } else {
-        botResponse = 'I apologize, I am still learning. You can easily file a complaint, track civic issues, or apply for schemes using the navigation bar. Let me know if you need assistance with registration!';
+        setMessages((prev) => [
+          ...prev,
+          { id: Date.now() + 1, sender: 'bot', text: 'Service unavailable. Try again later.', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
+        ]);
       }
-
+    } catch (err) {
       setMessages((prev) => [
         ...prev,
-        {
-          id: Date.now() + 1,
-          sender: 'bot',
-          text: botResponse,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        },
+        { id: Date.now() + 1, sender: 'bot', text: 'Network error. Check your connection.', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
       ]);
+    } finally {
       setIsTyping(false);
-    }, 1200);
+    }
   };
 
   return (

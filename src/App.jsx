@@ -5,6 +5,7 @@ import DashboardLayout from './layouts/DashboardLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import FieldWorkers from './pages/admin/FieldWorkers';
 import ComplaintsManagement from './pages/admin/ComplaintsManagement';
+import SchemeApplicants from './pages/admin/SchemeApplicants';
 import CitizenDashboard from './pages/citizen/CitizenDashboard';
 import RegisterComplaint from './pages/citizen/RegisterComplaint';
 import Schemes from './pages/citizen/Schemes';
@@ -30,6 +31,7 @@ function App() {
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="workers" element={<FieldWorkers />} />
           <Route path="complaints" element={<ComplaintsManagement />} />
+          <Route path="schemes" element={<SchemeApplicants />} />
         </Route>
 
         {/* Citizen Routes */}

@@ -7,6 +7,12 @@ export default {
   theme: {
     extend: {
       colors: {
+        primary: '#0d47a1',
+        'primary-dark': '#0b3a82',
+        background: '#f8fafc',
+        surface: '#ffffff',
+        text: '#1e293b',
+        muted: '#64748b',
         gov: {
           blue: '#1e3a8a', // Deep Blue
           primary: '#0d47a1', // Main Accent

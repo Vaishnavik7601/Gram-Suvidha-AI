@@ -1,15 +1,71 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, Upload, MapPin, Navigation, CheckCircle } from 'lucide-react';
 
 const RegisterComplaint = () => {
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
   const [category, setCategory] = useState('water_leakage');
+  const [priority, setPriority] = useState('Medium');
   const [description, setDescription] = useState('');
   const [address, setAddress] = useState('Bengeri, Vishweshwara Nagar, Hubli, Hubballi Urban Taluka, Dharwad, Karnataka, 580020, India');
+  const [locationMode, setLocationMode] = useState('gps');
+  const [locationStatus, setLocationStatus] = useState('Ready');
+  const [selectedFiles, setSelectedFiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+
+  const handleAutoDetectLocation = () => {
+    setError('');
+    setLocationStatus('Detecting location...');
+    setLocationMode('gps');
+
+    if (!navigator.geolocation) {
+      setError('Geolocation is not supported by your browser.');
+      setLocationStatus('Geolocation unavailable');
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const coords = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
+        setAddress(`Detected location: ${coords}`);
+        setLocationStatus('Location detected successfully');
+      },
+      (err) => {
+        setError('Unable to detect current location. Please allow location permissions or enter manually.');
+        setLocationStatus('Detection failed');
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
+    );
+  };
+
+  const handleCurrentGPS = () => {
+    setLocationMode('gps');
+    handleAutoDetectLocation();
+  };
+
+  const handleManualEntry = () => {
+    setError('');
+    setLocationMode('manual');
+    setLocationStatus('Enter the address manually below.');
+  };
+
+  const handleFileSelection = (event) => {
+    const files = Array.from(event.target.files || []);
+    setSelectedFiles(files);
+  };
+
+  const handleBrowseFiles = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,32 +79,19 @@ const RegisterComplaint = () => {
 
     setLoading(true);
 
-    // Retrieve user _id from localStorage user object
-    let userId = '60d5ec4986b245209c123456'; // Fallback dummy ObjectId
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      try {
-        const userObj = JSON.parse(userStr);
-        if (userObj && userObj._id) {
-          userId = userObj._id;
-        }
-      } catch (err) {
-        console.error("Failed to parse user from local storage", err);
-      }
-    }
-
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch('/api/complaints', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          user: userId,
           category: category,
           description: description,
-          location: address
+          location: address,
+          priority: priority
         })
       });
 
@@ -59,10 +102,10 @@ const RegisterComplaint = () => {
           navigate('/citizen/dashboard');
         }, 1500);
       } else {
-        setError(data.message || 'Failed to submit complaint.');
+        setError(data.message || data.error || 'Failed to submit complaint.');
       }
     } catch (err) {
-      setError('Network error. Is the backend running?');
+      setError(err.message || 'Network error. Is the backend running?');
     } finally {
       setLoading(false);
     }
@@ -106,6 +149,15 @@ const RegisterComplaint = () => {
           </div>
 
           <div>
+            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Priority</label>
+            <select value={priority} onChange={(e) => setPriority(e.target.value)} className="w-full border border-slate-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-white">
+              <option value="High">High</option>
+              <option value="Medium">Medium</option>
+              <option value="Low">Low</option>
+            </select>
+          </div>
+
+          <div>
             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Detailed Description *</label>
             <textarea 
               rows={4}
@@ -123,7 +175,7 @@ const RegisterComplaint = () => {
             2. Visual Evidence & Documentation
           </h3>
           
-          <div className="border-2 border-dashed border-slate-300 rounded-xl p-10 flex flex-col items-center justify-center text-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer group">
+          <div className="border-2 border-dashed border-slate-300 rounded-xl p-10 flex flex-col items-center justify-center text-center bg-slate-50 hover:bg-slate-100 transition-colors group">
             <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center text-slate-400 mb-4 group-hover:scale-110 transition-transform">
               <Upload size={28} />
             </div>
@@ -131,9 +183,22 @@ const RegisterComplaint = () => {
             <div className="text-sm text-slate-500 mb-6">Images (JPG, PNG), Videos (MP4), Documents (PDF, DOC)</div>
             <div className="text-xs text-slate-400">Up to 5 files (Max 10MB each)</div>
             
-            <button type="button" className="mt-6 px-6 py-2 bg-white border border-slate-300 rounded-lg text-sm font-bold text-slate-600 shadow-sm hover:bg-slate-50 flex items-center gap-2">
+            <button type="button" onClick={handleBrowseFiles} className="mt-6 px-6 py-2 bg-white border border-slate-300 rounded-lg text-sm font-bold text-slate-600 shadow-sm hover:bg-slate-50 flex items-center gap-2">
               <Upload size={16} /> Browse Files
             </button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileSelection}
+              multiple
+              accept="image/*,video/mp4,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              className="hidden"
+            />
+            {selectedFiles.length > 0 && (
+              <div className="mt-3 text-xs text-slate-600">
+                Selected: {selectedFiles.map((file) => file.name).join(', ')}
+              </div>
+            )}
           </div>
         </div>
 
@@ -144,17 +209,18 @@ const RegisterComplaint = () => {
           </h3>
           
           <div className="flex rounded-lg overflow-hidden border border-slate-200 p-1 bg-slate-100">
-            <button type="button" className="flex-1 py-2 text-sm font-bold bg-white rounded-md shadow-sm text-slate-800 flex justify-center items-center gap-2">
+            <button type="button" onClick={handleCurrentGPS} className={`flex-1 py-2 text-sm font-bold flex justify-center items-center gap-2 ${locationMode === 'gps' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
               <Navigation size={16} /> Current GPS
             </button>
-            <button type="button" className="flex-1 py-2 text-sm font-bold text-slate-500 hover:text-slate-700 flex justify-center items-center gap-2">
+            <button type="button" onClick={handleManualEntry} className={`flex-1 py-2 text-sm font-bold flex justify-center items-center gap-2 ${locationMode === 'manual' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
               <MapPin size={16} /> Manual Entry
             </button>
           </div>
 
-          <button type="button" className="w-full py-3 bg-primary text-white rounded-lg font-bold text-sm flex items-center justify-center gap-2 shadow-sm hover:bg-primary-dark transition-colors">
+          <button type="button" onClick={handleAutoDetectLocation} className="w-full py-3 bg-primary text-white rounded-lg font-bold text-sm flex items-center justify-center gap-2 shadow-sm hover:bg-primary-dark transition-colors">
             <Navigation size={16} /> Auto-Detect My Location
           </button>
+          {locationStatus && <div className="text-xs text-slate-500 mt-2">Status: {locationStatus}</div>}
 
           <div className="relative h-48 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 flex items-center justify-center">
             {/* Map placeholder */}

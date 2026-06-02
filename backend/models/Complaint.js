@@ -1,6 +1,14 @@
 const mongoose = require('mongoose');
 
 const complaintSchema = new mongoose.Schema({
+  complaintId: {
+    type: String,
+    unique: true,
+    required: true,
+    default: function() {
+      return 'CMP-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9).toUpperCase();
+    }
+  },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
@@ -9,6 +17,11 @@ const complaintSchema = new mongoose.Schema({
   category: {
     type: String,
     required: true,
+  },
+  priority: {
+    type: String,
+    enum: ['High', 'Medium', 'Low'],
+    default: 'Medium',
   },
   description: {
     type: String,
@@ -26,6 +39,10 @@ const complaintSchema = new mongoose.Schema({
   location: {
     type: String,
     required: true,
+  },
+  villageId: {
+    type: String,
+    default: '',
   },
 }, { timestamps: true });
 
