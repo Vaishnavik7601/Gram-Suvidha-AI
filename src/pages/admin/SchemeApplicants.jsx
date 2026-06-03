@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, Eye, ClipboardList, CheckCircle, XCircle, Clock, Calendar } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 const SchemeApplicants = () => {
+  const { t } = useLanguage();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedApp, setSelectedApp] = useState(null);
@@ -98,25 +100,25 @@ const SchemeApplicants = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
-            Scheme Applicants
+            {t('schemeApplicants')}
             <span className="text-xs font-bold bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span> {applications.length} Total Submissions
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span> {applications.length} {t('totalSubmissionsLabel')}
             </span>
           </h1>
-          <p className="text-slate-500 mt-1">Review, approve, and manage citizen welfare scheme applications.</p>
+          <p className="text-slate-500 mt-1">{t('schemeApplicantsDesc')}</p>
         </div>
       </div>
 
       <div className="card overflow-hidden bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <h3 className="font-bold text-lg text-slate-800">All Submissions</h3>
+          <h3 className="font-bold text-lg text-slate-800">{t('allSubmissions')}</h3>
           
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <div className="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 w-full sm:w-64 focus-within:border-primary transition-colors">
               <Search size={16} className="text-slate-400" />
               <input 
                 type="text" 
-                placeholder="Search by name, scheme, ID..." 
+                placeholder={t('searchApplicants')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="bg-transparent border-none outline-none text-sm w-full" 
@@ -129,12 +131,12 @@ const SchemeApplicants = () => {
                 onChange={(e) => setFilterStatus(e.target.value)}
                 className="bg-transparent border-none outline-none text-sm font-medium text-slate-600 cursor-pointer"
               >
-                <option value="All">All Statuses</option>
-                <option value="Pending">Pending</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Approved">Approved</option>
-                <option value="Rejected">Rejected</option>
-                <option value="Too Late">Too Late</option>
+                <option value="All">{t('allStatuses')}</option>
+                <option value="Pending">{t('pendingStatus')}</option>
+                <option value="In Progress">{t('inProgress')}</option>
+                <option value="Approved">{t('approvedStatus')}</option>
+                <option value="Rejected">{t('rejectedStatus')}</option>
+                <option value="Too Late">{t('tooLateStatus')}</option>
               </select>
             </div>
           </div>
@@ -142,18 +144,18 @@ const SchemeApplicants = () => {
         
         <div className="overflow-x-auto">
           {loading ? (
-            <div className="py-12 text-center text-slate-500">Loading scheme applications...</div>
+            <div className="py-12 text-center text-slate-500">{t('loadingApps')}</div>
           ) : (
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-200 bg-slate-50/50">
-                  <th className="py-3 pl-6">Scheme Name</th>
-                  <th className="py-3">Applicant (Relation, Age)</th>
-                  <th className="py-3">ID Number</th>
-                  <th className="py-3">ID Proof</th>
-                  <th className="py-3">Status</th>
-                  <th className="py-3">Applied On</th>
-                  <th className="py-3 text-center">Actions</th>
+                  <th className="py-3 pl-6">{t('schemeName')}</th>
+                  <th className="py-3">{t('applicantRelAge')}</th>
+                  <th className="py-3">{t('idNumberCol')}</th>
+                  <th className="py-3">{t('idProofCol')}</th>
+                  <th className="py-3">{t('statusLabel')}</th>
+                  <th className="py-3">{t('appliedOn')}</th>
+                  <th className="py-3 text-center">{t('actionsLabel')}</th>
                 </tr>
               </thead>
               <tbody className="text-sm">
@@ -172,7 +174,7 @@ const SchemeApplicants = () => {
                       <tr>
                         <td colSpan="7" className="py-12 text-center text-slate-400">
                           <ClipboardList className="mx-auto mb-2 text-slate-300" size={32} />
-                          No applications found matching search criteria.
+                          {t('noAppFound')}
                         </td>
                       </tr>
                     );
@@ -198,7 +200,7 @@ const SchemeApplicants = () => {
                             rel="noopener noreferrer" 
                             className="text-xs font-bold text-primary hover:underline"
                           >
-                            View Document
+                            {t('viewDocument')}
                           </a>
                         ) : (
                           <span className="text-slate-300 text-xs">No File</span>
@@ -218,7 +220,7 @@ const SchemeApplicants = () => {
                           onClick={() => handleOpenModal(app)} 
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-primary transition-colors shadow-sm"
                         >
-                          <Eye size={14} /> Review
+                          <Eye size={14} /> {t('reviewLabel')}
                         </button>
                       </td>
                     </tr>
@@ -236,44 +238,44 @@ const SchemeApplicants = () => {
           <div className="bg-white rounded-2xl max-w-lg w-full shadow-xl border border-slate-200 overflow-hidden">
             <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
               <div>
-                <h3 className="font-bold text-slate-800 text-lg">Review Application</h3>
-                <p className="text-xs text-slate-400 mt-0.5">Edit status and validity parameters.</p>
+                <h3 className="font-bold text-slate-800 text-lg">{t('reviewApplication')}</h3>
+                <p className="text-xs text-slate-400 mt-0.5">{t('editStatusParams')}</p>
               </div>
               <button onClick={() => setSelectedApp(null)} className="text-slate-400 hover:text-slate-650 font-bold text-lg">✕</button>
             </div>
             
             <div className="p-6 space-y-4">
               <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-2">
-                <div className="text-xs font-bold text-slate-400 uppercase">Scheme</div>
+                <div className="text-xs font-bold text-slate-400 uppercase">{t('schemeLabel')}</div>
                 <div className="font-bold text-slate-800 text-base">{selectedApp.schemeName}</div>
                 
                 <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-150/50 mt-2 text-xs text-slate-600">
-                  <div><span className="font-semibold text-slate-700">Applicant:</span> {selectedApp.applicantName}</div>
-                  <div><span className="font-semibold text-slate-700">Relation:</span> {selectedApp.relationship || 'Self'}</div>
-                  <div><span className="font-semibold text-slate-700">Age:</span> {selectedApp.age} years</div>
-                  <div><span className="font-semibold text-slate-700">ID Number:</span> {selectedApp.idNumber}</div>
+                  <div><span className="font-semibold text-slate-700">{t('applicant')}:</span> {selectedApp.applicantName}</div>
+                  <div><span className="font-semibold text-slate-700">{t('relationLabel')}:</span> {selectedApp.relationship || 'Self'}</div>
+                  <div><span className="font-semibold text-slate-700">{t('age')}:</span> {selectedApp.age} years</div>
+                  <div><span className="font-semibold text-slate-700">{t('idNumberCol')}:</span> {selectedApp.idNumber}</div>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Update Application Status</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t('updateAppStatus')}</label>
                 <select
                   value={modalStatus}
                   onChange={(e) => setModalStatus(e.target.value)}
                   className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-white font-medium"
                 >
-                  <option value="Pending">Pending</option>
+                  <option value="Pending">{t('pendingStatus')}</option>
                   <option value="Application Submitted">Application Submitted</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Approved">Approved</option>
-                  <option value="Rejected">Rejected</option>
-                  <option value="Too Late">Too Late</option>
+                  <option value="In Progress">{t('inProgress')}</option>
+                  <option value="Approved">{t('approvedStatus')}</option>
+                  <option value="Rejected">{t('rejectedStatus')}</option>
+                  <option value="Too Late">{t('tooLateStatus')}</option>
                 </select>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Benefit Start Date</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t('benefitStartDate')}</label>
                   <input
                     type="date"
                     value={modalAvailableFrom}
@@ -282,7 +284,7 @@ const SchemeApplicants = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Benefit Expiry Date</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t('benefitExpiryDate')}</label>
                   <input
                     type="date"
                     value={modalExpiresAt}
@@ -294,14 +296,14 @@ const SchemeApplicants = () => {
 
               {selectedApp.idProofPath && (
                 <div className="pt-2">
-                  <span className="text-xs font-semibold text-slate-550">Uploaded Document: </span>
+                  <span className="text-xs font-semibold text-slate-550">{t('uploadedDocument')} </span>
                   <a 
                     href={selectedApp.idProofPath} 
                     target="_blank" 
                     rel="noopener noreferrer" 
                     className="text-xs font-bold text-primary hover:underline inline-flex items-center gap-1 ml-1"
                   >
-                    View ID Proof File ↗
+                    {t('viewIdProof')}
                   </a>
                 </div>
               )}
@@ -312,13 +314,13 @@ const SchemeApplicants = () => {
                 onClick={() => setSelectedApp(null)} 
                 className="px-4 py-2 text-sm font-semibold text-slate-500 hover:text-slate-700 transition-colors"
               >
-                Cancel
+                {t('cancel')}
               </button>
               <button 
                 onClick={handleUpdateApplication} 
                 className="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg font-bold shadow-md shadow-primary/10 transition-colors"
               >
-                Save Changes
+                {t('saveChanges')}
               </button>
             </div>
           </div>

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Users, UserPlus, Search, Phone, MapPin, MoreVertical, Shield } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 const FieldWorkers = () => {
+  const { t } = useLanguage();
   const [workers, setWorkers] = useState([]);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -59,7 +61,7 @@ const FieldWorkers = () => {
         })
       });
       if (response.ok) {
-        setSuccess('Worker registered successfully!');
+        setSuccess(t('workerSuccess'));
         setName('');
         setPhone('');
         setAge('');
@@ -77,8 +79,8 @@ const FieldWorkers = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800">Field Workers</h1>
-          <p className="text-slate-500 mt-1">Manage and track the active GramSuvidha workforce.</p>
+          <h1 className="text-3xl font-bold text-slate-800">{t('fieldWorkers')}</h1>
+          <p className="text-slate-500 mt-1">{t('fieldWorkersDesc')}</p>
         </div>
       </div>
 
@@ -86,12 +88,12 @@ const FieldWorkers = () => {
         {/* Force Overview Table */}
         <div className="card xl:col-span-2 overflow-hidden flex flex-col">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="font-bold text-lg">Force Overview</h3>
+            <h3 className="font-bold text-lg">{t('forceOverview')}</h3>
             <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
               <Search size={16} className="text-slate-400" />
               <input 
                 type="text" 
-                placeholder="Search workers..." 
+                placeholder={t('searchWorkers')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="bg-transparent border-none outline-none text-sm w-48" 
@@ -101,17 +103,17 @@ const FieldWorkers = () => {
           
           <div className="overflow-x-auto flex-1">
             {loading ? (
-              <div className="py-12 text-center text-slate-500">Loading workers...</div>
+              <div className="py-12 text-center text-slate-500">{t('loadingWorkers')}</div>
             ) : (
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-200">
                     <th className="pb-3 pl-4">Photo</th>
-                    <th className="pb-3">Worker Identity</th>
-                    <th className="pb-3">Area / Village</th>
-                    <th className="pb-3">Contact</th>
-                    <th className="pb-3">Demographics</th>
-                    <th className="pb-3 text-center">Status</th>
+                    <th className="pb-3">{t('workerIdentity')}</th>
+                    <th className="pb-3">{t('areaVillage')}</th>
+                    <th className="pb-3">{t('contactLabel')}</th>
+                    <th className="pb-3">{t('demographics')}</th>
+                    <th className="pb-3 text-center">{t('statusLabel')}</th>
                   </tr>
                 </thead>
                 <tbody className="text-sm">
@@ -124,7 +126,7 @@ const FieldWorkers = () => {
                     if (filteredWorkers.length === 0) {
                       return (
                         <tr>
-                          <td colSpan="6" className="py-8 text-center text-slate-400">No field workers found matching search.</td>
+                          <td colSpan="6" className="py-8 text-center text-slate-400">{t('noWorkersFound')}</td>
                         </tr>
                       );
                     }
@@ -168,7 +170,6 @@ const FieldWorkers = () => {
                                   body: JSON.stringify({ status: newStatus })
                                 });
                                 if (res.ok) {
-                                  // optimistic update
                                   setWorkers(prev => prev.map(w => w._id === worker._id ? { ...w, status: newStatus } : w));
                                 } else {
                                   const err = await res.json();
@@ -180,9 +181,9 @@ const FieldWorkers = () => {
                             }}
                             className="text-sm rounded border border-slate-200 px-2 py-1 bg-white"
                           >
-                            <option value="active">Active</option>
-                            <option value="on_leave">On Leave</option>
-                            <option value="resigned">Resigned</option>
+                            <option value="active">{t('activeWorker')}</option>
+                            <option value="on_leave">{t('onLeave')}</option>
+                            <option value="resigned">{t('resigned')}</option>
                           </select>
                         </td>
                       </tr>
@@ -197,8 +198,8 @@ const FieldWorkers = () => {
         {/* Add New Worker Form */}
         <div className="card h-fit sticky top-6">
           <div className="mb-6">
-            <h3 className="font-bold text-lg">Add New Worker</h3>
-            <p className="text-xs text-slate-500 mt-1">Register a new field worker for the GramSuvidha force.</p>
+            <h3 className="font-bold text-lg">{t('addNewWorker')}</h3>
+            <p className="text-xs text-slate-500 mt-1">{t('addWorkerDesc')}</p>
           </div>
 
           {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-lg mb-4 text-xs font-semibold">{error}</div>}
@@ -207,7 +208,7 @@ const FieldWorkers = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Full Name</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t('fullName')}</label>
                 <input
                   type="text"
                   required
@@ -219,7 +220,7 @@ const FieldWorkers = () => {
               </div>
               
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Phone Number</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t('phoneNumber')}</label>
                 <input
                   type="text"
                   required
@@ -232,7 +233,7 @@ const FieldWorkers = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Age</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t('age')}</label>
                   <input
                     type="number"
                     required
@@ -243,21 +244,21 @@ const FieldWorkers = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Gender</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t('gender')}</label>
                   <select
                     value={gender}
                     onChange={(e) => setGender(e.target.value)}
                     className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-white"
                   >
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
+                    <option value="Male">{t('male')}</option>
+                    <option value="Female">{t('female')}</option>
+                    <option value="Other">{t('other')}</option>
                   </select>
                 </div>
               </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-xs text-blue-700">
-                <span className="font-bold">ℹ Village:</span> Worker will be automatically assigned to your village.
+                <span className="font-bold">ℹ {t('village')}:</span> {t('workerVillageNote')}
               </div>
             </div>
 
@@ -267,9 +268,9 @@ const FieldWorkers = () => {
                 onClick={() => { setName(''); setPhone(''); setAge(''); setError(''); setSuccess(''); }}
                 className="px-4 py-2 text-sm font-bold text-slate-500 hover:text-slate-800"
               >
-                Clear
+                {t('clear')}
               </button>
-              <button type="submit" className="btn-primary bg-green-600 hover:bg-green-700">Register Worker</button>
+              <button type="submit" className="btn-primary bg-green-600 hover:bg-green-700">{t('registerWorker')}</button>
             </div>
           </form>
         </div>

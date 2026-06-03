@@ -4,6 +4,7 @@ import SCHEMES_DB from '../../data/schemes';
 import { useLanguage } from '../../context/LanguageContext';
 
 const Schemes = () => {
+  const { t, language } = useLanguage();
   const [age, setAge] = useState('');
   const [income, setIncome] = useState('');
   const [socialCategory, setSocialCategory] = useState('');
@@ -42,8 +43,6 @@ const Schemes = () => {
     };
     fetchProfileAndApps();
   }, []);
-
-  const { language } = useLanguage();
 
   const filteredSchemes = useMemo(() => {
     if (!hasSearched) return [];
@@ -122,9 +121,9 @@ const Schemes = () => {
         <div>
           <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-2">
             <Lightbulb className="text-primary animate-pulse" />
-            Schemes Eligibility Checker
+            {t('schemesCheckerTitle')}
           </h1>
-          <p className="text-slate-500 mt-1 text-sm max-w-xl">Enter your demographic details below. The GramSuvidha engine will recommend government schemes tailored for you.</p>
+          <p className="text-slate-500 mt-1 text-sm max-w-xl">{t('schemesCheckerDesc')}</p>
         </div>
       </div>
 
@@ -132,7 +131,7 @@ const Schemes = () => {
         <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
           <div>
             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-              Age (Years)
+              {t('ageYears')}
             </label>
             <input 
               type="number" 
@@ -147,7 +146,7 @@ const Schemes = () => {
           <div>
             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
               <IndianRupee size={12} />
-              Annual Income (₹)
+              {t('annualIncome')}
             </label>
             <input 
               type="number" 
@@ -161,7 +160,7 @@ const Schemes = () => {
           </div>
           <div>
             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-              Social Category
+              {t('socialCategory')}
             </label>
             <select 
               required
@@ -169,7 +168,7 @@ const Schemes = () => {
               value={socialCategory}
               onChange={(e) => {setSocialCategory(e.target.value); setHasSearched(false);}}
             >
-              <option value="" disabled>Select Category</option>
+              <option value="" disabled>{t('selectCategory')}</option>
               <option value="General">General</option>
               <option value="OBC">OBC</option>
               <option value="SC">SC</option>
@@ -178,7 +177,7 @@ const Schemes = () => {
           </div>
           <div>
             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-              Primary Occupation
+              {t('primaryOccupation')}
             </label>
             <select 
               required
@@ -186,7 +185,7 @@ const Schemes = () => {
               value={occupation}
               onChange={(e) => {setOccupation(e.target.value); setHasSearched(false);}}
             >
-              <option value="" disabled>Select Occupation</option>
+              <option value="" disabled>{t('selectOccupation')}</option>
               <option value="Farmer">Farmer</option>
               <option value="Student">Student</option>
               <option value="Labour">Labour</option>
@@ -197,7 +196,7 @@ const Schemes = () => {
           <div className="lg:col-span-4">
             <button type="submit" className="w-full py-3 bg-primary text-white rounded-lg font-bold hover:bg-primary-dark shadow-sm transition-colors flex items-center justify-center gap-2">
               <Search size={18} />
-              Check Eligibility
+              {t('checkEligibilityBtn')}
             </button>
           </div>
         </form>
@@ -207,7 +206,7 @@ const Schemes = () => {
         <div className="space-y-4">
           <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 border-b pb-2">
             <Filter size={18} className="text-slate-400" />
-            Recommended Schemes ({filteredSchemes.length})
+            {t('recommendedSchemes')} ({filteredSchemes.length})
           </h2>
           
           {filteredSchemes.length > 0 ? (
@@ -223,7 +222,7 @@ const Schemes = () => {
                     <h3 className="font-bold text-lg text-slate-800 mb-2 pr-12">{txt.name}</h3>
                     <p className="text-slate-600 text-sm mb-4 leading-relaxed">{txt.short}</p>
                     <div className="mt-auto flex items-center gap-2 text-xs font-semibold text-primary bg-primary/10 w-max px-3 py-1 rounded-full">
-                      <ShieldCheck size={14} /> Highly Eligible
+                      <ShieldCheck size={14} /> {t('highlyEligible')}
                     </div>
                   </div>
                 );
@@ -232,8 +231,8 @@ const Schemes = () => {
           ) : (
             <div className="text-center py-12 bg-slate-50 rounded-xl border border-slate-200">
               <div className="text-slate-400 mb-2 flex justify-center"><Search size={48} /></div>
-              <p className="text-slate-600 font-medium">No matching schemes found for the entered criteria.</p>
-              <p className="text-slate-400 text-sm mt-1">Try adjusting the income or age parameters.</p>
+              <p className="text-slate-600 font-medium">{t('noMatchingSchemesMsg')}</p>
+              <p className="text-slate-400 text-sm mt-1">{t('tryAdjustMsg')}</p>
             </div>
           )}
         </div>
@@ -252,11 +251,11 @@ const Schemes = () => {
                   return <h2 className="text-2xl font-bold text-slate-800 mb-2 pr-6">{txt.name}</h2>;
                 })()}
                 <div className="flex items-center gap-2 text-xs font-semibold text-primary bg-primary/10 w-max px-3 py-1 rounded-full mb-4">
-                   <ShieldCheck size={14} /> You are Eligible
+                   <ShieldCheck size={14} /> {t('youAreEligible')}
                 </div>
                 
                 <div className="bg-blue-50/50 border border-blue-100 p-4 rounded-xl mb-6">
-                  <h4 className="font-semibold text-slate-800 mb-1 text-sm">Scheme Details</h4>
+                  <h4 className="font-semibold text-slate-800 mb-1 text-sm">{t('schemeDetailsLabel')}</h4>
                   <p className="text-slate-600 text-sm leading-relaxed">
                     {(() => {
                       const txt = selectedScheme.translations?.[language] || selectedScheme.translations?.en || {};
@@ -266,7 +265,7 @@ const Schemes = () => {
                 </div>
 
                 <div className="border-t border-slate-100 pt-4">
-                  <h3 className="font-bold text-lg text-slate-800 mb-4">Application Form</h3>
+                  <h3 className="font-bold text-lg text-slate-800 mb-4">{t('applicationForm')}</h3>
                   
                   {(() => {
                     const schemeTxt = selectedScheme.translations?.[language] || selectedScheme.translations?.en || {};
@@ -279,7 +278,7 @@ const Schemes = () => {
                       <form onSubmit={handleApply} className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Applying For</label>
+                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t('applyingFor')}</label>
                             <select 
                               required
                               className="w-full border border-slate-300 rounded-lg p-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-white"
@@ -296,7 +295,7 @@ const Schemes = () => {
                             </select>
                           </div>
                           <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Applicant Name</label>
+                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t('applicantNameLabel')}</label>
                             <input 
                               type="text" 
                               required
@@ -311,22 +310,22 @@ const Schemes = () => {
                         {isAlreadyRegistered && (
                           <div className="bg-orange-50 border border-orange-200 text-orange-850 px-4 py-3 rounded-lg flex items-center gap-2">
                             <ShieldCheck className="text-orange-600" />
-                            <span className="text-xs font-semibold">Notice: You have already registered for this scheme under the relationship "{relationship}".</span>
+                            <span className="text-xs font-semibold">{t('alreadyRegisteredNotice')} "{relationship}".</span>
                           </div>
                         )}
 
                         <div>
-                          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Age</label>
+                          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t('age')}</label>
                           <input 
                             type="number" 
                             disabled
                             className="w-full border border-slate-300 rounded-lg p-2 text-sm bg-slate-50 text-slate-500"
                             value={age}
                           />
-                          <p className="text-[10px] text-slate-400 mt-1">Pre-filled from eligibility criteria</p>
+                          <p className="text-[10px] text-slate-400 mt-1">{t('preFilled')}</p>
                         </div>
                         <div>
-                          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ID Number (Aadhaar / PAN)</label>
+                          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t('idNumberLabel')}</label>
                           <input 
                             type="text" 
                             required
@@ -338,7 +337,7 @@ const Schemes = () => {
                           <p className="text-[10px] text-slate-400 mt-1">Enter a valid 12-digit Aadhaar number or a 10-character PAN number (e.g., ABCDE1234F)</p>
                         </div>
                         <div>
-                          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Upload ID Proof (Scan/Photo)</label>
+                          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t('uploadIdProof')}</label>
                           <input 
                             type="file" 
                             required
@@ -356,7 +355,7 @@ const Schemes = () => {
                         )}
 
                         <button type="submit" disabled={isSubmitting || isAlreadyRegistered} className="w-full py-3 bg-primary text-white rounded-lg font-bold hover:bg-primary-dark transition-colors flex justify-center items-center gap-2 disabled:opacity-50">
-                          {isSubmitting ? 'Submitting...' : 'Submit Application'}
+                          {isSubmitting ? t('submitting') : t('submitApplication')}
                         </button>
                       </form>
                     );
@@ -368,10 +367,10 @@ const Schemes = () => {
                 <div className="w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
                   <ShieldCheck size={32} />
                 </div>
-                <h3 className="text-xl font-bold text-slate-800 mb-2">Application Submitted!</h3>
+                <h3 className="text-xl font-bold text-slate-800 mb-2">{t('applicationSubmitted')}</h3>
                 <p className="text-slate-600 text-sm">{(() => {
                   const txt = selectedScheme.translations?.[language] || selectedScheme.translations?.en || {};
-                  return `Your application for ${txt.name || selectedScheme.key} has been successfully submitted and is under review.`;
+                  return `${t('schemeSubmittedDesc')} (${txt.name || selectedScheme.key})`;
                 })()}</p>
               </div>
             )}

@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { UserPlus, Activity } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 const SignUp = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -120,7 +122,7 @@ const SignUp = () => {
           </div>
           GramSuvidha
         </div>
-        <p className="text-sm text-slate-600">Register a new citizen or admin account</p>
+        <p className="text-sm text-slate-600">{t('signupTitle')}</p>
       </div>
 
       <div className="relative z-10 mt-8 sm:mx-auto sm:w-full sm:max-w-md">
@@ -129,26 +131,26 @@ const SignUp = () => {
 
           <form onSubmit={handleSignUp} className="space-y-4">
             <div className="mb-4">
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Registration Type</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t('regType')}</label>
               <div className="flex gap-4">
                 <label className={`flex items-center gap-2 cursor-pointer border p-3 rounded-lg w-full justify-center transition-colors ${
                   formData.role === 'citizen' ? 'border-primary bg-primary/5 text-primary' : 'border-slate-250 text-slate-700 hover:bg-slate-50'
                 }`}>
                   <input type="radio" name="role" value="citizen" className="text-primary focus:ring-primary hidden" checked={formData.role === 'citizen'} onChange={handleChange} />
-                  <span className="font-semibold text-sm">Citizen</span>
+                  <span className="font-semibold text-sm">{t('citizen')}</span>
                 </label>
                 <label className={`flex items-center gap-2 cursor-pointer border p-3 rounded-lg w-full justify-center transition-colors ${
                   formData.role === 'admin' ? 'border-primary bg-primary/5 text-primary' : 'border-slate-250 text-slate-700 hover:bg-slate-50'
                 }`}>
                   <input type="radio" name="role" value="admin" className="text-primary focus:ring-primary hidden" checked={formData.role === 'admin'} onChange={handleChange} />
-                  <span className="font-semibold text-sm">Panchayat Admin</span>
+                  <span className="font-semibold text-sm">{t('pAdmin')}</span>
                 </label>
               </div>
             </div>
 
             {formData.role === 'admin' && (
               <div className="mb-4 bg-orange-50 border border-orange-100 p-4 rounded-xl">
-                <label className="block text-xs font-bold text-orange-700 uppercase tracking-wider mb-2">Official Panchayat / Village ID</label>
+                <label className="block text-xs font-bold text-orange-700 uppercase tracking-wider mb-2">{t('villageId')}</label>
                 <input 
                   type="text" 
                   name="villageId" 
@@ -158,13 +160,13 @@ const SignUp = () => {
                   onChange={handleChange} 
                   value={formData.villageId} 
                 />
-                <p className="text-[10px] text-orange-600 font-medium mt-2">Required for administrative verification.</p>
+                <p className="text-[10px] text-orange-600 font-medium mt-2">{t('adminVerifRequired')}</p>
               </div>
             )}
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">First Name</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t('firstName')}</label>
                 <input 
                   type="text" 
                   name="firstName" 
@@ -175,7 +177,7 @@ const SignUp = () => {
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Last Name</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t('lastName')}</label>
                 <input 
                   type="text" 
                   name="lastName" 
@@ -189,7 +191,7 @@ const SignUp = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Age</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t('age')}</label>
                 <input 
                   type="number" 
                   name="age" 
@@ -201,7 +203,7 @@ const SignUp = () => {
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Mobile Number</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t('phone')}</label>
                 <input 
                   type="tel" 
                   name="phone" 
@@ -216,7 +218,7 @@ const SignUp = () => {
             {formData.role === 'citizen' && (
               <>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Village Name</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t('villageName')}</label>
                   <input
                     type="text"
                     name="village"
@@ -228,7 +230,7 @@ const SignUp = () => {
                   />
                 </div>
                 <div className="bg-blue-50 border border-blue-100 p-3 rounded-xl">
-                  <label className="block text-xs font-bold text-blue-700 uppercase tracking-wider mb-2">Village / Panchayat ID</label>
+                  <label className="block text-xs font-bold text-blue-700 uppercase tracking-wider mb-2">{t('villageId')}</label>
                   <input
                     type="text"
                     name="villageId"
@@ -238,14 +240,14 @@ const SignUp = () => {
                     onChange={handleChange}
                     value={formData.villageId}
                   />
-                  <p className="text-[10px] text-blue-600 font-medium mt-2">⚠ You must enter the same Village ID your Panchayat Admin used during registration. This links you to the correct admin.</p>
+                  <p className="text-[10px] text-blue-600 font-medium mt-2">⚠ {t('villageIdCitizenNote')}</p>
                 </div>
               </>
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Email Address</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t('email')}</label>
                 <input 
                   type="email" 
                   name="email" 
@@ -256,7 +258,7 @@ const SignUp = () => {
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Gender</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t('gender')}</label>
                 <select 
                   name="gender" 
                   required 
@@ -264,16 +266,16 @@ const SignUp = () => {
                   onChange={handleChange} 
                   value={formData.gender}
                 >
-                  <option value="" disabled>Select Gender</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
+                  <option value="" disabled>{t('selectGender')}</option>
+                  <option value="Male">{t('male')}</option>
+                  <option value="Female">{t('female')}</option>
+                  <option value="Other">{t('other')}</option>
                 </select>
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Password</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t('password')}</label>
               <input 
                 type="password" 
                 name="password" 
@@ -285,7 +287,7 @@ const SignUp = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Confirm Password</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t('confirmPass')}</label>
               <input 
                 type="password" 
                 name="confirmPassword" 
@@ -302,14 +304,14 @@ const SignUp = () => {
               className="w-full py-3 bg-primary text-white rounded-lg font-bold hover:bg-primary-dark shadow-sm flex justify-center items-center gap-2 mt-6 transition-colors disabled:opacity-50"
             >
               <UserPlus size={20} />
-              {loading ? 'Registering...' : 'Register Now'}
+              {loading ? t('registering') : t('registerBtn')}
             </button>
           </form>
 
           <div className="mt-6 text-center text-xs text-slate-500 font-medium">
-            Already registered?{' '}
+            {t('alreadyReg')}{' '}
             <Link to="/login" className="font-bold text-primary hover:underline">
-              Login Here
+              {t('loginHere')}
             </Link>
           </div>
         </div>

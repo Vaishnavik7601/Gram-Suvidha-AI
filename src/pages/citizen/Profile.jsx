@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { User, Mail, Phone, Calendar, ClipboardList, Clock, CheckCircle, XCircle, MapPin, ShieldCheck } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 const Profile = () => {
+  const { t } = useLanguage();
   const [profileData, setProfileData] = useState(null);
   const [editData, setEditData] = useState({ name: '', age: '', gender: '', village: '' });
   const [isEditing, setIsEditing] = useState(false);
@@ -117,7 +119,7 @@ const Profile = () => {
       <div className="flex items-center justify-between mb-2">
         <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
           <User className="text-primary" size={32} />
-          Citizen Profile
+          {t('citizenProfile')}
         </h1>
         {!isEditing && (
           <button
@@ -128,7 +130,7 @@ const Profile = () => {
             }}
             className="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-primary/30 hover:bg-primary-dark transition-all hover:-translate-y-0.5"
           >
-            Edit Profile
+            {t('editProfile')}
           </button>
         )}
       </div>
@@ -190,7 +192,7 @@ const Profile = () => {
         {user.role === 'citizen' && (
           <div className="lg:col-span-1 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
             <h3 className="font-bold text-slate-800 mb-5 text-xs uppercase tracking-wider flex items-center gap-2">
-              <ShieldCheck size={16} className="text-primary" /> Handling Administrator
+              <ShieldCheck size={16} className="text-primary" /> {t('handlingAdmin')}
             </h3>
             
             {admin ? (
@@ -201,7 +203,7 @@ const Profile = () => {
                   </div>
                   <div>
                     <p className="font-bold text-slate-800 text-lg">{admin.name}</p>
-                    <p className="text-xs text-slate-500 font-medium bg-slate-100 px-2 py-0.5 rounded-md inline-block mt-0.5">Panchayat Admin</p>
+                    <p className="text-xs text-slate-500 font-medium bg-slate-100 px-2 py-0.5 rounded-md inline-block mt-0.5">{t('pAdmin')}</p>
                   </div>
                 </div>
                 <div className="bg-slate-50 rounded-xl p-4 space-y-3 border border-slate-100">
@@ -219,8 +221,8 @@ const Profile = () => {
               <div className="text-sm text-slate-500 bg-slate-50 p-6 rounded-xl border border-slate-100 text-center h-[calc(100%-2rem)] flex flex-col justify-center items-center gap-2">
                 <ShieldCheck size={32} className="text-slate-300" />
                 <div>
-                  <p className="font-semibold text-slate-700">No administrator found</p>
-                  <p className="text-xs mt-1 text-slate-400">Ensure your Village ID is correct.</p>
+                  <p className="font-semibold text-slate-700">{t('noAdminFound')}</p>
+                  <p className="text-xs mt-1 text-slate-400">{t('ensureVillageId')}</p>
                 </div>
               </div>
             )}
@@ -234,7 +236,7 @@ const Profile = () => {
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
             <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-3">
               <h3 className="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-2">
-                <User size={14} className="text-primary"/> Basic Details
+                <User size={14} className="text-primary"/> {t('basicDetails')}
               </h3>
               {isEditing && (
                 <div className="flex items-center gap-2">
@@ -247,14 +249,14 @@ const Profile = () => {
                     }}
                     className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-200 transition-colors"
                   >
-                    Cancel
+                    {t('cancel')}
                   </button>
                   <button
                     type="button"
                     onClick={saveProfile}
                     className="rounded-lg bg-primary px-4 py-1.5 text-xs font-bold text-white hover:bg-primary-dark transition-colors shadow-sm"
                   >
-                    Save
+                    {t('save')}
                   </button>
                 </div>
               )}
@@ -262,7 +264,7 @@ const Profile = () => {
 
             <div className="flex flex-col gap-4">
               <div className="bg-slate-50/50 p-3 rounded-xl border border-slate-100">
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Full Name</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">{t('fullName')}</p>
                 {isEditing ? (
                   <input type="text" value={editData.name} onChange={(e) => setEditData({ ...editData, name: e.target.value })} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium focus:border-primary focus:ring-1 focus:ring-primary outline-none" />
                 ) : (
@@ -271,7 +273,7 @@ const Profile = () => {
               </div>
               
               <div className="bg-slate-50/50 p-3 rounded-xl border border-slate-100">
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Age</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">{t('age')}</p>
                 {isEditing ? (
                   <input type="number" value={editData.age} onChange={(e) => setEditData({ ...editData, age: e.target.value })} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium focus:border-primary focus:ring-1 focus:ring-primary outline-none" />
                 ) : (
@@ -280,13 +282,13 @@ const Profile = () => {
               </div>
 
               <div className="bg-slate-50/50 p-3 rounded-xl border border-slate-100">
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Gender</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">{t('gender')}</p>
                 {isEditing ? (
                   <select value={editData.gender} onChange={(e) => setEditData({ ...editData, gender: e.target.value })} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium focus:border-primary focus:ring-1 focus:ring-primary outline-none">
-                    <option value="">Select gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
+                    <option value="">{t('selectGender')}</option>
+                    <option value="Male">{t('male')}</option>
+                    <option value="Female">{t('female')}</option>
+                    <option value="Other">{t('other')}</option>
                   </select>
                 ) : (
                   <p className="font-bold text-slate-800 text-sm capitalize">{user.gender || 'Not set'}</p>
@@ -294,7 +296,7 @@ const Profile = () => {
               </div>
 
               <div className="bg-slate-50/50 p-3 rounded-xl border border-slate-100">
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Village</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">{t('village')}</p>
                 {isEditing ? (
                   <input type="text" value={editData.village} onChange={(e) => setEditData({ ...editData, village: e.target.value })} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium focus:border-primary focus:ring-1 focus:ring-primary outline-none" />
                 ) : (
@@ -315,9 +317,9 @@ const Profile = () => {
             <div className="border-b border-slate-100 pb-4">
               <h3 className="font-bold text-xl text-slate-800 flex items-center gap-2 mb-1">
                 <ClipboardList className="text-primary" />
-                My Applied Schemes
+                {t('myAppliedSchemes')}
               </h3>
-              <p className="text-sm text-slate-500">Track the approval and eligibility of your submitted scheme applications.</p>
+              <p className="text-sm text-slate-500">{t('trackApproval')}</p>
             </div>
 
             {applications && applications.length > 0 ? (
@@ -333,14 +335,14 @@ const Profile = () => {
                     </div>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100">
-                      <div><span className="text-slate-400 font-semibold">Applicant:</span> <span className="font-bold text-slate-700">{app.applicantName}</span> ({app.relationship})</div>
-                      <div><span className="text-slate-400 font-semibold">ID Number:</span> <span className="font-bold text-slate-700">{app.idNumber ? `xxxx-xxxx-${app.idNumber.slice(-4)}` : 'N/A'}</span></div>
-                      <div><span className="text-slate-400 font-semibold">Applied On:</span> <span className="font-bold text-slate-700">{new Date(app.createdAt).toLocaleDateString()}</span></div>
+                      <div><span className="text-slate-400 font-semibold">{t('applicant')}:</span> <span className="font-bold text-slate-700">{app.applicantName}</span> ({app.relationship})</div>
+                      <div><span className="text-slate-400 font-semibold">{t('applicationId')}:</span> <span className="font-bold text-slate-700">{app.idNumber ? `xxxx-xxxx-${app.idNumber.slice(-4)}` : 'N/A'}</span></div>
+                      <div><span className="text-slate-400 font-semibold">{t('appliedOn')}:</span> <span className="font-bold text-slate-700">{new Date(app.createdAt).toLocaleDateString()}</span></div>
                       {app.idProofPath && (
                         <div>
                           <span className="text-slate-400 font-semibold">ID Proof:</span>{' '}
                           <a href={app.idProofPath} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold bg-primary/5 px-2 py-0.5 rounded">
-                            View Document
+                            {t('viewDocument')}
                           </a>
                         </div>
                       )}
@@ -351,14 +353,14 @@ const Profile = () => {
                         {app.availableFrom && (
                           <div className="flex items-center gap-2">
                             <Clock size={16} className="text-blue-500"/>
-                            <span className="font-semibold text-blue-900">Benefit Start:</span>{' '}
+                            <span className="font-semibold text-blue-900">{t('benefitStart')}</span>{' '}
                             <span className="font-bold">{new Date(app.availableFrom).toLocaleDateString()}</span>
                           </div>
                         )}
                         {app.expiresAt && (
                           <div className="flex items-center gap-2">
                             <XCircle size={16} className="text-rose-500"/>
-                            <span className="font-semibold text-blue-900">Benefit Expiry:</span>{' '}
+                            <span className="font-semibold text-blue-900">{t('benefitExpiry')}</span>{' '}
                             <span className="font-bold">{new Date(app.expiresAt).toLocaleDateString()}</span>
                           </div>
                         )}
@@ -372,8 +374,8 @@ const Profile = () => {
                 <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-slate-100">
                    <ClipboardList className="text-slate-300" size={40} />
                 </div>
-                <p className="text-slate-700 font-bold text-lg mb-1">No schemes applied yet</p>
-                <p className="text-slate-500 text-sm max-w-sm mx-auto">Visit the Schemes section to check your eligibility for government welfare programs and register online.</p>
+                <p className="text-slate-700 font-bold text-lg mb-1">{t('noSchemes')}</p>
+                <p className="text-slate-500 text-sm max-w-sm mx-auto">{t('noSchemesText')}</p>
               </div>
             )}
           </div>
